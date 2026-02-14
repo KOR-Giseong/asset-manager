@@ -47,20 +47,32 @@ export function AssetTable({ assets }: { assets: Asset[] }) {
 
   function handleDelete(asset: Asset) {
     startTransition(async () => {
-      await deleteAsset(asset.id);
+      const result = await deleteAsset(asset.id);
+      if (!result.success) {
+        toast.error(result.error || "삭제에 실패했습니다.");
+        return;
+      }
       toast.success(`'${asset.name}' 자산이 삭제되었습니다.`);
     });
   }
 
   async function handleUpdate(formData: FormData) {
-    await updateAsset(formData);
+    const result = await updateAsset(formData);
+    if (!result.success) {
+      toast.error(result.error || "수정에 실패했습니다.");
+      return;
+    }
     setEditingAsset(null);
     toast.success("자산 정보가 수정되었습니다.");
   }
 
   function handleRefresh() {
     startRefresh(async () => {
-      await refreshPrices();
+      const result = await refreshPrices();
+      if (!result.success) {
+        toast.error(result.error || "시세 업데이트에 실패했습니다.");
+        return;
+      }
       toast.success("시세가 업데이트되었습니다.");
     });
   }

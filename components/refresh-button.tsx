@@ -11,7 +11,11 @@ export function RefreshButton() {
 
   function handleRefresh() {
     startRefresh(async () => {
-      await refreshPrices();
+      const result = await refreshPrices();
+      if (!result.success) {
+        toast.error(result.error || "시세 업데이트에 실패했습니다.");
+        return;
+      }
       toast.success("시세가 업데이트되었습니다.");
     });
   }

@@ -7,14 +7,21 @@ import YahooFinance from "yahoo-finance2";
 
 const yahooFinance = new YahooFinance();
 
-async function getCurrentUserId(): Promise<string> {
-  const session = await auth();
+async function getCurrentUserId(): Promise<string | null> {
+  try {
+    const session = await auth();
+    console.log("[Session] 현재 세션:", JSON.stringify(session, null, 2));
 
-  if (!session?.user?.id) {
-    throw new Error("로그인이 필요합니다.");
+    if (!session?.user?.id) {
+      console.error("[Session] 세션에 user.id 없음:", session);
+      return null;
+    }
+
+    return session.user.id;
+  } catch (err) {
+    console.error("[Session] auth() 호출 실패:", err);
+    return null;
   }
-
-  return session.user.id;
 }
 
 export type Asset = {
@@ -27,8 +34,14 @@ export type Asset = {
   userId: string;
 };
 
+export type ActionResult = {
+  success: boolean;
+  error?: string;
+};
+
 export async function getAssets(): Promise<Asset[]> {
   const userId = await getCurrentUserId();
+  if (!userId) return [];
 
   const assets = await prisma.asset.findMany({
     where: { userId },
@@ -38,8 +51,11 @@ export async function getAssets(): Promise<Asset[]> {
   return assets;
 }
 
-export async function addAsset(formData: FormData) {
+export async function addAsset(formData: FormData): Promise<ActionResult> {
   const userId = await getCurrentUserId();
+  if (!userId) {
+    return { success: false, error: "로그인이 필요합니다." };
+  }
 
   const name = formData.get("name") as string;
   const type = formData.get("type") as string;
@@ -48,7 +64,7 @@ export async function addAsset(formData: FormData) {
   const symbol = (formData.get("symbol") as string) || null;
 
   if (!name || !type || isNaN(amount)) {
-    throw new Error("잘못된 입력입니다.");
+    return { success: false, error: "잘못된 입력입니다." };
   }
 
   // symbol이 있으면 즉시 시세 조회
@@ -72,14 +88,18 @@ export async function addAsset(formData: FormData) {
   });
 
   revalidatePath("/");
+  return { success: true };
 }
 
-export async function deleteAsset(id: string) {
+export async function deleteAsset(id: string): Promise<ActionResult> {
   const userId = await getCurrentUserId();
+  if (!userId) {
+    return { success: false, error: "로그인이 필요합니다." };
+  }
 
   const asset = await prisma.asset.findUnique({ where: { id } });
   if (!asset || asset.userId !== userId) {
-    throw new Error("권한이 없습니다.");
+    return { success: false, error: "권한이 없습니다." };
   }
 
   await prisma.transaction.deleteMany({
@@ -91,10 +111,14 @@ export async function deleteAsset(id: string) {
   });
 
   revalidatePath("/");
+  return { success: true };
 }
 
-export async function updateAsset(formData: FormData) {
+export async function updateAsset(formData: FormData): Promise<ActionResult> {
   const userId = await getCurrentUserId();
+  if (!userId) {
+    return { success: false, error: "로그인이 필요합니다." };
+  }
 
   const id = formData.get("id") as string;
   const name = formData.get("name") as string;
@@ -104,12 +128,12 @@ export async function updateAsset(formData: FormData) {
   const symbol = (formData.get("symbol") as string) || null;
 
   if (!id || !name || !type || isNaN(amount)) {
-    throw new Error("잘못된 입력입니다.");
+    return { success: false, error: "잘못된 입력입니다." };
   }
 
   const asset = await prisma.asset.findUnique({ where: { id } });
   if (!asset || asset.userId !== userId) {
-    throw new Error("권한이 없습니다.");
+    return { success: false, error: "권한이 없습니다." };
   }
 
   await prisma.asset.update({
@@ -124,6 +148,7 @@ export async function updateAsset(formData: FormData) {
   });
 
   revalidatePath("/");
+  return { success: true };
 }
 
 async function fetchStockPrice(symbol: string): Promise<number | null> {
@@ -166,8 +191,11 @@ async function fetchPrice(symbol: string): Promise<number | null> {
   return isStock ? fetchStockPrice(symbol) : fetchCryptoPrice(symbol);
 }
 
-export async function refreshPrices() {
+export async function refreshPrices(): Promise<ActionResult> {
   const userId = await getCurrentUserId();
+  if (!userId) {
+    return { success: false, error: "로그인이 필요합니다." };
+  }
 
   const assets = await prisma.asset.findMany({
     where: {
@@ -190,4 +218,5 @@ export async function refreshPrices() {
   }
 
   revalidatePath("/");
+  return { success: true };
 }

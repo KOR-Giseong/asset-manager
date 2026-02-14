@@ -23,7 +23,11 @@ export function AddAssetDialog() {
 
   async function handleSubmit(formData: FormData) {
     const name = formData.get("name") as string;
-    await addAsset(formData);
+    const result = await addAsset(formData);
+    if (!result.success) {
+      toast.error(result.error || "자산 추가에 실패했습니다.");
+      return;
+    }
     setOpen(false);
     toast.success(`'${name}' 자산이 추가되었습니다.`);
   }
