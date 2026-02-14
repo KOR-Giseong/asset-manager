@@ -6,5 +6,6 @@ export { PropertyCard } from "./property-card";
 export { PropertyDashboard } from "./property-dashboard";
 export { PropertyDetailSheet } from "./property-detail-sheet";
 export { PropertyMiniChart } from "./property-mini-chart";
+export { PropertySummaryCard } from "./property-summary-card";
 export { AddPropertyDialog } from "./add-property-dialog";
 export { EditPropertyDialog } from "./edit-property-dialog";

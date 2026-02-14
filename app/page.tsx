@@ -13,7 +13,7 @@ import { AssetTable } from "@/components/asset-table";
 import { AssetTrendChart } from "@/components/asset-trend-chart";
 import { RefreshButton } from "@/components/refresh-button";
 import { UserNav } from "@/components/user-nav";
-import { PropertyDashboard } from "@/components/property";
+import { PropertySummaryCard } from "@/components/property";
 import { SidebarLayout } from "@/components/layout";
 import { LoginButton } from "@/components/login-button";
 import { getAssets } from "@/app/actions/asset-actions";
@@ -209,11 +209,11 @@ export default async function Home() {
             </CardContent>
           </Card>
 
-          {/* 부동산 관리 섹션 */}
-          <div className="mt-8">
-            <PropertyDashboard 
-              properties={properties} 
-              totalAssetValue={assetTotal} 
+          {/* 부동산 요약 */}
+          <div className="mt-6">
+            <PropertySummaryCard
+              summary={propertySummary}
+              propertyCount={properties.length}
             />
           </div>
         </div>
