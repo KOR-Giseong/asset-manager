@@ -11,13 +11,9 @@ export interface AssetSnapshotData {
 }
 
 /** 날짜가 포함된 스냅샷 조회 결과 */
-export interface SnapshotWithDate {
+export interface SnapshotWithDate extends AssetSnapshotData {
   id: string;
   date: string; // YYYY-MM-DD
-  totalAmount: number;
-  stockAmount: number;
-  propertyAmount: number;
-  depositAmount: number;
 }
 
 /** 히스토리 조회 기간 */
@@ -39,4 +35,20 @@ export interface AssetChange {
   percentChange: number;
   startAmount: number;
   endAmount: number;
+  period: HistoryPeriod;
+}
+
+/** 차트 데이터 + 변화율 통합 응답 */
+export interface ChartResponse {
+  chartData: ChartDataPoint[];
+  change: AssetChange | null;
+}
+
+/** Cron Job 실행 결과 */
+export interface SnapshotJobResult {
+  total: number;
+  success: number;
+  skipped: number;
+  failed: number;
+  errors: string[];
 }

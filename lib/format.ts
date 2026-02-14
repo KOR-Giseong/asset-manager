@@ -108,3 +108,18 @@ export function formatBillions(value: number | null | undefined): string {
 
   return `${value.toLocaleString()}원`;
 }
+
+/**
+ * 차트 Y축용 간소화 포맷터 (억/만 단위)
+ * @example formatYAxis(350000000) => "3.5억"
+ * @example formatYAxis(50000) => "5만"
+ */
+export function formatYAxis(value: number): string {
+  if (value >= 100_000_000) {
+    return `${(value / 100_000_000).toFixed(1)}억`;
+  }
+  if (value >= 10_000) {
+    return `${(value / 10_000).toFixed(0)}만`;
+  }
+  return value.toLocaleString();
+}

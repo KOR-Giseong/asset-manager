@@ -4,7 +4,7 @@
 // 자산 추이 선 그래프 (Line Chart)
 // =========================================
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useCallback } from "react";
 import {
   Line,
   XAxis,
@@ -20,30 +20,10 @@ import { TrendingUp, TrendingDown, History, Camera, Loader2 } from "lucide-react
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getHistory, createManualSnapshot, getAssetChangeRate } from "@/app/actions/history-actions";
-import { formatKRW } from "@/lib/format";
+import { getChartDataAction, createManualSnapshot } from "@/app/actions/history-actions";
+import { formatKRW, formatYAxis } from "@/lib/format";
 import { toast } from "sonner";
-import type { HistoryPeriod } from "@/services/historyService";
-
-// =========================================
-// 타입 정의
-// =========================================
-
-interface ChartDataPoint {
-  date: string;
-  displayDate: string;
-  total: number;
-  stock: number;
-  property: number;
-  deposit: number;
-}
-
-interface AssetChange {
-  absoluteChange: number;
-  percentChange: number;
-  startAmount: number;
-  endAmount: number;
-}
+import type { HistoryPeriod, ChartDataPoint, AssetChange } from "@/types/history";
 
 // =========================================
 // 기간 옵션
@@ -97,6 +77,21 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 }
 
 // =========================================
+// XAxis interval 계산 (모바일 대응)
+// =========================================
+
+function getXAxisInterval(dataLength: number, isMobile: boolean): number | "preserveStartEnd" {
+  if (dataLength <= 7) return 0;
+  if (isMobile) {
+    if (dataLength <= 14) return 1;
+    if (dataLength <= 30) return 4;
+    return Math.floor(dataLength / 5);
+  }
+  if (dataLength <= 30) return 2;
+  return Math.floor(dataLength / 8);
+}
+
+// =========================================
 // 메인 컴포넌트
 // =========================================
 
@@ -105,63 +100,40 @@ export function AssetTrendChart() {
   const [period, setPeriod] = useState<HistoryPeriod>("30d");
   const [assetChange, setAssetChange] = useState<AssetChange | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  // 데이터 로드
+  // 모바일 감지
   useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        const [historyResult, changeResult] = await Promise.all([
-          getHistory(period),
-          getAssetChangeRate(period),
-        ]);
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
-        if (historyResult.success && historyResult.data) {
-          const chartData: ChartDataPoint[] = historyResult.data.map((item) => ({
-            date: item.date,
-            displayDate: formatDisplayDate(item.date),
-            total: item.totalAmount,
-            stock: item.stockAmount,
-            property: item.propertyAmount,
-            deposit: item.depositAmount,
-          }));
-          setData(chartData);
-        }
+  // 차트 데이터 로드
+  const loadData = useCallback(async (p: HistoryPeriod) => {
+    setIsLoading(true);
+    try {
+      const result = await getChartDataAction(p);
 
-        if (changeResult.success && changeResult.data) {
-          setAssetChange(changeResult.data);
-        } else {
-          setAssetChange(null);
-        }
-      } catch (error) {
-        console.error("Failed to load history:", error);
-      } finally {
-        setIsLoading(false);
+      if (result.success && result.data) {
+        setData(result.data.chartData);
+        setAssetChange(result.data.change);
+      } else {
+        setData([]);
+        setAssetChange(null);
       }
+    } catch (error) {
+      console.error("Failed to load chart data:", error);
+    } finally {
+      setIsLoading(false);
     }
+  }, []);
 
-    loadData();
-  }, [period]);
-
-  // 날짜 포맷팅
-  function formatDisplayDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    return `${month}/${day}`;
-  }
-
-  // Y축 포맷팅 (억 단위)
-  function formatYAxis(value: number): string {
-    if (value >= 100_000_000) {
-      return `${(value / 100_000_000).toFixed(1)}억`;
-    }
-    if (value >= 10_000) {
-      return `${(value / 10_000).toFixed(0)}만`;
-    }
-    return value.toLocaleString();
-  }
+  useEffect(() => {
+    loadData(period);
+  }, [period, loadData]);
 
   // 수동 스냅샷 생성
   function handleCreateSnapshot() {
@@ -171,19 +143,7 @@ export function AssetTrendChart() {
 
       if (result.success) {
         toast.success("오늘의 자산 스냅샷이 기록되었습니다!", { id: "create-snapshot" });
-        // 데이터 리로드
-        const historyResult = await getHistory(period);
-        if (historyResult.success && historyResult.data) {
-          const chartData: ChartDataPoint[] = historyResult.data.map((item) => ({
-            date: item.date,
-            displayDate: formatDisplayDate(item.date),
-            total: item.totalAmount,
-            stock: item.stockAmount,
-            property: item.propertyAmount,
-            deposit: item.depositAmount,
-          }));
-          setData(chartData);
-        }
+        await loadData(period);
       } else {
         toast.error(result.error || "스냅샷 생성에 실패했습니다.", { id: "create-snapshot" });
       }
@@ -304,20 +264,16 @@ export function AssetTrendChart() {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={data}
-                margin={{ top: 10, right: 5, left: -10, bottom: 0 }}
+                margin={
+                  isMobile
+                    ? { top: 5, right: 5, left: -15, bottom: 0 }
+                    : { top: 10, right: 10, left: -10, bottom: 0 }
+                }
               >
                 <defs>
                   <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorStock" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorProperty" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
@@ -328,29 +284,31 @@ export function AssetTrendChart() {
                 <XAxis
                   dataKey="displayDate"
                   stroke="hsl(var(--muted-foreground))"
-                  fontSize={10}
+                  fontSize={isMobile ? 9 : 10}
                   tickLine={false}
                   axisLine={false}
-                  interval="preserveStartEnd"
+                  interval={getXAxisInterval(data.length, isMobile)}
                 />
                 <YAxis
                   stroke="hsl(var(--muted-foreground))"
-                  fontSize={10}
+                  fontSize={isMobile ? 9 : 10}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={formatYAxis}
-                  width={50}
+                  width={isMobile ? 40 : 50}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend
-                  verticalAlign="top"
-                  height={36}
-                  iconType="circle"
-                  iconSize={8}
-                  formatter={(value) => (
-                    <span className="text-xs text-muted-foreground">{value}</span>
-                  )}
-                />
+                {!isMobile && (
+                  <Legend
+                    verticalAlign="top"
+                    height={36}
+                    iconType="circle"
+                    iconSize={8}
+                    formatter={(value: string) => (
+                      <span className="text-xs text-muted-foreground">{value}</span>
+                    )}
+                  />
+                )}
                 <Area
                   type="monotone"
                   dataKey="total"
@@ -359,7 +317,7 @@ export function AssetTrendChart() {
                   strokeWidth={2}
                   fill="url(#colorTotal)"
                   dot={false}
-                  activeDot={{ r: 6, fill: "#3b82f6" }}
+                  activeDot={{ r: isMobile ? 4 : 6, fill: "#3b82f6" }}
                 />
                 <Line
                   type="monotone"

@@ -13,10 +13,15 @@ import {
   getLatestSnapshot,
   calculateAssetChange,
   hasSnapshotToday,
-  type HistoryPeriod,
-  type SnapshotWithDate,
-  type AssetSnapshotData,
+  getChartData as getChartDataService,
 } from "@/services/historyService";
+import type {
+  AssetSnapshotData,
+  SnapshotWithDate,
+  HistoryPeriod,
+  AssetChange,
+  ChartResponse,
+} from "@/types/history";
 
 // =========================================
 // 타입 정의
@@ -59,7 +64,7 @@ async function getCurrentUserId(): Promise<string | null> {
 // =========================================
 
 /**
- * 수동으로 스냅샷 생성 (테스트용)
+ * 수동으로 스냅샷 생성
  */
 export async function createManualSnapshot(): Promise<ActionResult<AssetSnapshotData>> {
   const userId = await getCurrentUserId();
@@ -68,7 +73,6 @@ export async function createManualSnapshot(): Promise<ActionResult<AssetSnapshot
   }
 
   try {
-    // 오늘 이미 스냅샷이 있는지 확인
     const alreadyExists = await hasSnapshotToday(userId);
     if (alreadyExists) {
       return { success: false, error: "오늘 이미 스냅샷이 기록되어 있습니다." };
@@ -76,7 +80,7 @@ export async function createManualSnapshot(): Promise<ActionResult<AssetSnapshot
 
     const snapshot = await createAssetSnapshot(userId);
     revalidatePath("/");
-    
+
     return { success: true, data: snapshot };
   } catch (error) {
     console.error("[createManualSnapshot] Error:", error);
@@ -96,7 +100,7 @@ export async function forceCreateSnapshot(): Promise<ActionResult<AssetSnapshotD
   try {
     const snapshot = await createAssetSnapshot(userId);
     revalidatePath("/");
-    
+
     return { success: true, data: snapshot };
   } catch (error) {
     console.error("[forceCreateSnapshot] Error:", error);
@@ -151,12 +155,7 @@ export async function getLatest(): Promise<ActionResult<SnapshotWithDate | null>
  */
 export async function getAssetChangeRate(
   period: HistoryPeriod = "30d"
-): Promise<ActionResult<{
-  absoluteChange: number;
-  percentChange: number;
-  startAmount: number;
-  endAmount: number;
-} | null>> {
+): Promise<ActionResult<AssetChange | null>> {
   const userId = await getCurrentUserId();
   if (!userId) {
     return { success: false, error: "로그인이 필요합니다." };
@@ -168,6 +167,27 @@ export async function getAssetChangeRate(
   } catch (error) {
     console.error("[getAssetChangeRate] Error:", error);
     return { success: false, error: "변화율 계산에 실패했습니다." };
+  }
+}
+
+/**
+ * 차트 데이터 + 변화율 통합 조회
+ * 서버에서 가공 완료된 데이터를 한 번에 반환
+ */
+export async function getChartDataAction(
+  period: HistoryPeriod = "30d"
+): Promise<ActionResult<ChartResponse>> {
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    return { success: false, error: "로그인이 필요합니다." };
+  }
+
+  try {
+    const result = await getChartDataService(userId, period);
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("[getChartDataAction] Error:", error);
+    return { success: false, error: "차트 데이터 조회에 실패했습니다." };
   }
 }
 

@@ -18,6 +18,9 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "자산 관리 대시보드",
   description: "나의 자산 현황을 한눈에 관리하세요",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
