@@ -17,6 +17,23 @@ async function getCurrentUserId(): Promise<string | null> {
       return null;
     }
 
+    // DB에 User가 없으면 생성 (JWT 전략 + PrismaAdapter 조합 대응)
+    const existingUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+    });
+
+    if (!existingUser) {
+      await prisma.user.create({
+        data: {
+          id: session.user.id,
+          name: session.user.name,
+          email: session.user.email,
+          image: session.user.image,
+        },
+      });
+      console.log("[Session] 새 User 생성:", session.user.id);
+    }
+
     return session.user.id;
   } catch (err) {
     console.error("[Session] auth() 호출 실패:", err);
