@@ -61,7 +61,10 @@ export default async function Home() {
 
   const assets = await getAssets();
 
-  const totalAssets = assets.reduce((sum: number, a: Asset) => sum + a.amount, 0);
+  const totalAssets = assets.reduce(
+    (sum: number, a: Asset) => sum + (a.currentPrice > 0 ? a.currentPrice : a.amount),
+    0
+  );
 
   const categoryTotals = assets.reduce(
     (acc: Record<string, number>, a: Asset) => {

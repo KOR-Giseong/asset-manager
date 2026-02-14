@@ -59,6 +59,7 @@ model Asset {
   type         String
   amount       Float
   currentPrice Float
+  symbol       String?
   userId       String
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]

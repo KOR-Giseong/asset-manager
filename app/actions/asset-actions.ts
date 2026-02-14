@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import yahooFinance from "yahoo-finance2";
 
 async function getCurrentUserId(): Promise<string> {
   const session = await auth();
@@ -20,6 +21,7 @@ export type Asset = {
   type: string;
   amount: number;
   currentPrice: number;
+  symbol: string | null;
   userId: string;
 };
 
@@ -40,9 +42,10 @@ export async function addAsset(formData: FormData) {
   const name = formData.get("name") as string;
   const type = formData.get("type") as string;
   const amount = parseFloat(formData.get("amount") as string);
-  const currentPrice = parseFloat(formData.get("currentPrice") as string);
+  const currentPrice = parseFloat(formData.get("currentPrice") as string) || 0;
+  const symbol = (formData.get("symbol") as string) || null;
 
-  if (!name || !type || isNaN(amount) || isNaN(currentPrice)) {
+  if (!name || !type || isNaN(amount)) {
     throw new Error("잘못된 입력입니다.");
   }
 
@@ -52,6 +55,7 @@ export async function addAsset(formData: FormData) {
       type,
       amount,
       currentPrice,
+      symbol,
       userId,
     },
   });
@@ -85,9 +89,10 @@ export async function updateAsset(formData: FormData) {
   const name = formData.get("name") as string;
   const type = formData.get("type") as string;
   const amount = parseFloat(formData.get("amount") as string);
-  const currentPrice = parseFloat(formData.get("currentPrice") as string);
+  const currentPrice = parseFloat(formData.get("currentPrice") as string) || 0;
+  const symbol = (formData.get("symbol") as string) || null;
 
-  if (!id || !name || !type || isNaN(amount) || isNaN(currentPrice)) {
+  if (!id || !name || !type || isNaN(amount)) {
     throw new Error("잘못된 입력입니다.");
   }
 
@@ -103,8 +108,65 @@ export async function updateAsset(formData: FormData) {
       type,
       amount,
       currentPrice,
+      symbol,
     },
   });
+
+  revalidatePath("/");
+}
+
+async function fetchStockPrice(symbol: string): Promise<number | null> {
+  try {
+    const result = await yahooFinance.quote(symbol) as Record<string, unknown>;
+    const price = result?.regularMarketPrice;
+    return typeof price === "number" ? price : null;
+  } catch {
+    console.error(`주식 시세 조회 실패: ${symbol}`);
+    return null;
+  }
+}
+
+async function fetchCryptoPrice(symbol: string): Promise<number | null> {
+  try {
+    const market = `KRW-${symbol.toUpperCase()}`;
+    const res = await fetch(
+      `https://api.upbit.com/v1/ticker?markets=${market}`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data[0]?.trade_price ?? null;
+  } catch {
+    console.error(`코인 시세 조회 실패: ${symbol}`);
+    return null;
+  }
+}
+
+export async function refreshPrices() {
+  const userId = await getCurrentUserId();
+
+  const assets = await prisma.asset.findMany({
+    where: {
+      userId,
+      symbol: { not: null },
+    },
+  });
+
+  for (const asset of assets) {
+    if (!asset.symbol) continue;
+
+    const isStock = asset.symbol.includes(".");
+    const price = isStock
+      ? await fetchStockPrice(asset.symbol)
+      : await fetchCryptoPrice(asset.symbol);
+
+    if (price !== null) {
+      await prisma.asset.update({
+        where: { id: asset.id },
+        data: { currentPrice: price },
+      });
+    }
+  }
 
   revalidatePath("/");
 }

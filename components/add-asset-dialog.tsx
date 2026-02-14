@@ -19,6 +19,7 @@ import { toast } from "sonner";
 
 export function AddAssetDialog() {
   const [open, setOpen] = useState(false);
+  const [type, setType] = useState("주식");
 
   async function handleSubmit(formData: FormData) {
     const name = formData.get("name") as string;
@@ -60,14 +61,28 @@ export function AddAssetDialog() {
                 name="type"
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 defaultValue="주식"
+                onChange={(e) => setType(e.target.value)}
               >
                 <option value="주식">주식</option>
                 <option value="부동산">부동산</option>
                 <option value="예적금">예적금</option>
               </select>
             </div>
+            {type === "주식" && (
+              <div className="grid gap-2">
+                <Label htmlFor="asset-symbol">종목 코드 (Symbol)</Label>
+                <Input
+                  id="asset-symbol"
+                  name="symbol"
+                  placeholder="주식: 005930.KS / 코인: BTC"
+                />
+                <p className="text-xs text-muted-foreground">
+                  한국 주식: 종목코드.KS (예: 005930.KS) · 미국 주식: 티커 (예: AAPL) · 코인: 심볼 (예: BTC, ETH)
+                </p>
+              </div>
+            )}
             <div className="grid gap-2">
-              <Label htmlFor="asset-amount">금액 (원)</Label>
+              <Label htmlFor="asset-amount">매수 금액 (원)</Label>
               <Input
                 id="asset-amount"
                 name="amount"
