@@ -41,26 +41,55 @@ export async function addAsset(formData: FormData): Promise<ActionResult> {
 
   const name = formData.get("name") as string;
   const type = formData.get("type") as string;
-  const amount = parseFloat(formData.get("amount") as string);
-  const currentPrice = parseFloat(formData.get("currentPrice") as string) || 0;
   const symbol = (formData.get("symbol") as string) || null;
+  
+  // 주식: 매수 단가 * 수량으로 amount 계산
+  // 비주식: 직접 입력된 amount 사용
+  let amount: number;
+  let currentPrice: number;
+  let purchasePrice: number | null = null;
+  let quantity: number | null = null;
 
-  if (!name || !type || isNaN(amount)) {
-    return { success: false, error: "잘못된 입력입니다." };
+  if (type === "주식") {
+    purchasePrice = parseFloat(formData.get("purchasePrice") as string);
+    quantity = parseFloat(formData.get("quantity") as string);
+    
+    if (isNaN(purchasePrice) || isNaN(quantity) || purchasePrice <= 0 || quantity <= 0) {
+      return { success: false, error: "매수 단가와 수량을 올바르게 입력해주세요." };
+    }
+    
+    amount = purchasePrice * quantity;
+    currentPrice = amount; // 초기값은 매수금액과 동일, 나중에 시세 업데이트
+    
+    // 심볼이 있으면 현재 시세 가져오기
+    if (symbol) {
+      const livePrice = await fetchPrice(symbol);
+      if (livePrice !== null) {
+        currentPrice = livePrice * quantity;
+      }
+    }
+  } else {
+    // 비주식 (부동산, 예적금)
+    amount = parseFloat(formData.get("amount") as string);
+    currentPrice = parseFloat(formData.get("currentPrice") as string) || 0;
+    
+    if (isNaN(amount)) {
+      return { success: false, error: "잘못된 입력입니다." };
+    }
   }
 
-  let resolvedPrice = currentPrice;
-  if (symbol) {
-    const livePrice = await fetchPrice(symbol);
-    if (livePrice !== null) resolvedPrice = livePrice;
+  if (!name || !type) {
+    return { success: false, error: "잘못된 입력입니다." };
   }
 
   await assetRepo.createAsset({
     name,
     type,
     amount,
-    currentPrice: resolvedPrice,
+    currentPrice,
     symbol,
+    purchasePrice,
+    quantity,
     userId,
   });
 
@@ -89,20 +118,61 @@ export async function updateAsset(formData: FormData): Promise<ActionResult> {
   const id = formData.get("id") as string;
   const name = formData.get("name") as string;
   const type = formData.get("type") as string;
-  const amount = parseFloat(formData.get("amount") as string);
-  const currentPrice = parseFloat(formData.get("currentPrice") as string) || 0;
   const symbol = (formData.get("symbol") as string) || null;
 
-  if (!id || !name || !type || isNaN(amount)) {
+  if (!id || !name || !type) {
     return { success: false, error: "잘못된 입력입니다." };
   }
 
-  const asset = await assetRepo.findAssetById(id);
-  if (!asset || asset.userId !== userId) {
+  const existingAsset = await assetRepo.findAssetById(id);
+  if (!existingAsset || existingAsset.userId !== userId) {
     return { success: false, error: "권한이 없습니다." };
   }
 
-  await assetRepo.updateAsset(id, { name, type, amount, currentPrice, symbol });
+  // 주식: 매수 단가 * 수량으로 amount 계산
+  let amount: number;
+  let currentPrice: number;
+  let purchasePrice: number | null = null;
+  let quantity: number | null = null;
+
+  if (type === "주식") {
+    purchasePrice = parseFloat(formData.get("purchasePrice") as string);
+    quantity = parseFloat(formData.get("quantity") as string);
+    
+    if (isNaN(purchasePrice) || isNaN(quantity) || purchasePrice <= 0 || quantity <= 0) {
+      return { success: false, error: "매수 단가와 수량을 올바르게 입력해주세요." };
+    }
+    
+    amount = purchasePrice * quantity;
+    currentPrice = existingAsset.currentPrice || amount;
+    
+    // 심볼이 있으면 현재 시세 가져오기
+    if (symbol) {
+      const livePrice = await fetchPrice(symbol);
+      if (livePrice !== null) {
+        currentPrice = livePrice * quantity;
+      }
+    }
+  } else {
+    // 비주식 (부동산, 예적금)
+    amount = parseFloat(formData.get("amount") as string);
+    currentPrice = parseFloat(formData.get("currentPrice") as string) || 0;
+    
+    if (isNaN(amount)) {
+      return { success: false, error: "잘못된 입력입니다." };
+    }
+  }
+
+  await assetRepo.updateAsset(id, { 
+    name, 
+    type, 
+    amount, 
+    currentPrice, 
+    symbol, 
+    purchasePrice, 
+    quantity 
+  });
+  
   revalidatePath("/");
   return { success: true };
 }
@@ -115,9 +185,13 @@ export async function refreshPrices(): Promise<ActionResult> {
 
   for (const asset of assets) {
     if (!asset.symbol) continue;
-    const price = await fetchPrice(asset.symbol);
-    if (price !== null) {
-      await assetRepo.updateAssetPrice(asset.id, price);
+    const unitPrice = await fetchPrice(asset.symbol);
+    if (unitPrice !== null) {
+      // 주식이고 수량이 있으면: 시세 * 수량으로 평가금액 업데이트
+      // 그 외: 단순히 시세 업데이트
+      const quantity = asset.quantity ?? 1;
+      const totalValue = unitPrice * quantity;
+      await assetRepo.updateAssetPrice(asset.id, totalValue);
     }
   }
 

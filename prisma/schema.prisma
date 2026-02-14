@@ -59,9 +59,14 @@ model Asset {
   id           String        @id @default(cuid())
   name         String
   type         String
-  amount       Float
-  currentPrice Float
+  amount       Float         // 총 매수 금액 (purchasePrice * quantity로 계산, 비주식은 직접 입력)
+  currentPrice Float         // 총 평가 금액 (시세 * quantity 또는 비주식은 직접 입력)
   symbol       String?
+  
+  // 주식 전용 필드
+  purchasePrice Float?       // 매수 단가 (주식에서만 사용)
+  quantity      Float?       // 보유 수량 (주식에서만 사용)
+  
   userId       String
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]

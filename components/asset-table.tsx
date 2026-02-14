@@ -13,6 +13,7 @@ import { EditAssetDialog } from "@/components/edit-asset-dialog";
 import { deleteAsset, refreshPrices } from "@/app/actions/asset-actions";
 import { formatKRW } from "@/lib/format";
 import { getProfitInfo } from "@/lib/asset-utils";
+import { calculateStockProfit, formatProfitRate } from "@/services/stock-service";
 import { toast } from "sonner";
 import { handleActionResult, toastMessages } from "@/lib/toast-helpers";
 import type { Asset } from "@/types/asset";
@@ -29,7 +30,10 @@ interface AssetCardProps {
 }
 
 function AssetCard({ asset, onEdit, onDelete, isPending }: AssetCardProps) {
-  const profit = getProfitInfo(asset.amount, asset.currentPrice);
+  const stockProfit = calculateStockProfit(asset);
+  const profit = stockProfit 
+    ? { diff: stockProfit.profitAmount, rate: stockProfit.profitRate }
+    : getProfitInfo(asset.amount, asset.currentPrice);
 
   return (
     <div className="rounded-lg border border-border/60 bg-card p-3 shadow-sm">
@@ -43,6 +47,12 @@ function AssetCard({ asset, onEdit, onDelete, isPending }: AssetCardProps) {
           </div>
           {asset.symbol && (
             <p className="mt-0.5 text-xs text-muted-foreground">{asset.symbol}</p>
+          )}
+          {/* 주식: 매수 단가 표시 */}
+          {stockProfit && (
+            <p className="mt-0.5 text-[10px] text-muted-foreground">
+              매수가 {formatKRW(stockProfit.purchasePrice)} × {stockProfit.quantity}주
+            </p>
           )}
         </div>
         <DropdownMenu>
@@ -74,7 +84,7 @@ function AssetCard({ asset, onEdit, onDelete, isPending }: AssetCardProps) {
           <p className="font-medium">{formatKRW(asset.amount)}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">현재가</p>
+          <p className="text-muted-foreground">평가금액</p>
           <p className="font-medium">
             {asset.currentPrice > 0 ? formatKRW(asset.currentPrice) : "—"}
           </p>
@@ -82,7 +92,12 @@ function AssetCard({ asset, onEdit, onDelete, isPending }: AssetCardProps) {
       </div>
 
       {profit && (
-        <div className="mt-2 flex items-center justify-end">
+        <div className="mt-2 flex items-center justify-between">
+          {stockProfit && (
+            <span className={`text-xs ${profit.diff >= 0 ? "text-red-500" : "text-blue-500"}`}>
+              {profit.diff > 0 ? "+" : ""}{formatKRW(profit.diff)}
+            </span>
+          )}
           <span
             className={`text-sm font-semibold ${
               profit.rate > 0
@@ -90,10 +105,9 @@ function AssetCard({ asset, onEdit, onDelete, isPending }: AssetCardProps) {
                 : profit.rate < 0
                   ? "text-blue-500"
                   : "text-muted-foreground"
-            }`}
+            } ${!stockProfit ? "ml-auto" : ""}`}
           >
-            {profit.rate > 0 ? "+" : ""}
-            {profit.rate.toFixed(2)}%
+            {formatProfitRate(profit.rate)}
           </span>
         </div>
       )}
@@ -177,15 +191,18 @@ export function AssetTable({ assets }: { assets: Asset[] }) {
               <tr className="border-b border-border">
                 <th className="pb-3 text-left font-medium text-muted-foreground">자산명</th>
                 <th className="pb-3 text-left font-medium text-muted-foreground">카테고리</th>
-                <th className="pb-3 text-right font-medium text-muted-foreground">매수금액</th>
-                <th className="pb-3 text-right font-medium text-muted-foreground">현재가</th>
-                <th className="pb-3 text-right font-medium text-muted-foreground">수익률</th>
+                <th className="pb-3 text-right font-medium text-muted-foreground">매수 정보</th>
+                <th className="pb-3 text-right font-medium text-muted-foreground">평가금액</th>
+                <th className="pb-3 text-right font-medium text-muted-foreground">수익</th>
                 <th className="pb-3 text-right font-medium text-muted-foreground">관리</th>
               </tr>
             </thead>
             <tbody>
               {assets.map((asset) => {
-                const profit = getProfitInfo(asset.amount, asset.currentPrice);
+                const stockProfit = calculateStockProfit(asset);
+                const profit = stockProfit 
+                  ? { diff: stockProfit.profitAmount, rate: stockProfit.profitRate }
+                  : getProfitInfo(asset.amount, asset.currentPrice);
 
                 return (
                   <tr
@@ -206,8 +223,14 @@ export function AssetTable({ assets }: { assets: Asset[] }) {
                         {asset.type}
                       </span>
                     </td>
-                    <td className="py-3 text-right font-medium">
-                      {formatKRW(asset.amount)}
+                    {/* 매수 정보: 주식은 단가×수량, 그 외는 총액 */}
+                    <td className="py-3 text-right">
+                      <div className="font-medium">{formatKRW(asset.amount)}</div>
+                      {stockProfit && (
+                        <div className="text-[11px] text-muted-foreground">
+                          {formatKRW(stockProfit.purchasePrice)} × {stockProfit.quantity}주
+                        </div>
+                      )}
                     </td>
                     <td className="py-3 text-right font-medium">
                       {asset.currentPrice > 0 ? formatKRW(asset.currentPrice) : (
@@ -216,20 +239,27 @@ export function AssetTable({ assets }: { assets: Asset[] }) {
                         </span>
                       )}
                     </td>
+                    {/* 수익: 수익금 + 수익률 */}
                     <td className="py-3 text-right">
                       {profit ? (
-                        <span
-                          className={`inline-flex items-center gap-1 font-semibold ${
-                            profit.rate > 0
-                              ? "text-red-500"
-                              : profit.rate < 0
-                                ? "text-blue-500"
-                                : "text-muted-foreground"
-                          }`}
-                        >
-                          {profit.rate > 0 ? "+" : ""}
-                          {profit.rate.toFixed(2)}%
-                        </span>
+                        <div>
+                          <span
+                            className={`font-semibold ${
+                              profit.rate > 0
+                                ? "text-red-500"
+                                : profit.rate < 0
+                                  ? "text-blue-500"
+                                  : "text-muted-foreground"
+                            }`}
+                          >
+                            {formatProfitRate(profit.rate)}
+                          </span>
+                          {stockProfit && (
+                            <div className={`text-[11px] ${profit.diff >= 0 ? "text-red-500/80" : "text-blue-500/80"}`}>
+                              {profit.diff > 0 ? "+" : ""}{formatKRW(profit.diff)}
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-muted-foreground">
                           {asset.symbol ? "N/A" : "—"}
