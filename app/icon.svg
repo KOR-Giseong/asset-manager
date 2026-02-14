@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <!-- 파란색 배경 (둥근 사각형) -->
-  <rect width="32" height="32" rx="6" fill="#3b82f6"/>
+  <!-- 검정색 배경 (둥근 사각형) -->
+  <rect width="32" height="32" rx="6" fill="#000000"/>
   
-  <!-- Wallet 아이콘 (lucide) -->
-  <g transform="translate(6, 6)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Wallet 아이콘 (lucide) - 중앙 정렬 -->
+  <svg x="5" y="5" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/>
     <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>
-  </g>
+  </svg>
 </svg>
