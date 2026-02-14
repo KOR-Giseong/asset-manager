@@ -71,10 +71,10 @@ export default async function TaxPage() {
   return (
     <SidebarLayout>
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="container max-w-6xl py-6">
           {/* 헤더 */}
-          <div className="mb-6 sm:mb-8">
-            <div className="flex items-center gap-3 pl-12 md:pl-0">
+          <div className="mb-6 pl-12 md:pl-0 sm:mb-8">
+            <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg sm:h-12 sm:w-12">
                 <svg
                   className="h-5 w-5 text-white sm:h-6 sm:w-6"
