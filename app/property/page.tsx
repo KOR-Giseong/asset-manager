@@ -63,7 +63,7 @@ export default function PropertyPage() {
 
   return (
     <SidebarLayout>
-      <div className="container py-6 pl-12 md:pl-0">
+      <div className="container py-6">
         <PropertyDashboard properties={properties} />
       </div>
     </SidebarLayout>

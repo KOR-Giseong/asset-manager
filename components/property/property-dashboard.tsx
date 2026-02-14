@@ -46,7 +46,7 @@ export function PropertyDashboard({ properties, totalAssetValue = 0 }: PropertyD
     <div className="space-y-4 sm:space-y-6">
       {/* 헤더 */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 pl-12 sm:gap-3 md:pl-0">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 sm:h-10 sm:w-10">
             <Building2 className="h-4 w-4 text-emerald-500 sm:h-5 sm:w-5" />
           </div>
