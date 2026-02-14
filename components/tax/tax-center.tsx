@@ -165,7 +165,7 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
   }
 
   return (
-    <div className="space-y-6 pl-12 md:pl-0">
+    <div className="space-y-6">
       {/* 연봉 저장 영역 */}
       <Card className="border-border/60">
         <CardContent className="p-3 sm:p-4">
