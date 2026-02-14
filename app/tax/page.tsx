@@ -64,6 +64,7 @@ export default async function TaxPage() {
     dividendIncome,
     interestIncome,
     totalAssets: assets.reduce((sum, a) => sum + (a.amount || 0), 0),
+    savedAnnualSalary: user.annualSalary || null,
   };
 
   return (

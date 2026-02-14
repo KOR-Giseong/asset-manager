@@ -4,7 +4,7 @@
 // 세금 & 절세 마스터 센터 메인 컴포넌트
 // =========================================
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import {
   Wallet,
   Calculator,
@@ -12,6 +12,8 @@ import {
   TrendingUp,
   HeartPulse,
   ShieldCheck,
+  Save,
+  Check,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { IsaIrpCalculator } from "./isa-irp-calculator";
@@ -22,6 +24,7 @@ import { HealthInsuranceCalculator } from "./health-insurance-calculator";
 import { TaxComparisonChart } from "./tax-comparison-chart";
 import { TaxPieChart } from "./tax-pie-chart";
 import { generateTotalTaxReport, generateComparisonChartData, generatePieChartData } from "@/services/taxService";
+import { updateAnnualSalary } from "@/app/actions/tax-actions";
 import type { TotalTaxReport, TaxComparisonData, TaxPieData } from "@/types/tax";
 import { formatKRW } from "@/lib/format";
 
@@ -40,6 +43,7 @@ interface TaxCenterProps {
     dividendIncome: number;
     interestIncome: number;
     totalAssets: number;
+    savedAnnualSalary: number | null;
   };
 }
 
@@ -67,9 +71,32 @@ const TABS: TabConfig[] = [
 
 export function TaxCenter({ initialData }: TaxCenterProps) {
   const [activeTab, setActiveTab] = useState<TabId>("isa-irp");
-  const [annualSalary, setAnnualSalary] = useState(60_000_000); // 기본 연봉 6천만원
+  const [annualSalary, setAnnualSalary] = useState(
+    initialData.savedAnnualSalary || 60_000_000 // DB 저장값 또는 기본값 6천만원
+  );
   const [isaDeposit, setIsaDeposit] = useState(10_000_000);
   const [irpDeposit, setIrpDeposit] = useState(7_000_000);
+  const [isPending, startTransition] = useTransition();
+  const [isSaved, setIsSaved] = useState(!!initialData.savedAnnualSalary);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // 연봉 변경 핸들러 (변경 감지)
+  function handleSalaryChange(value: number) {
+    setAnnualSalary(value);
+    setHasChanges(true);
+    setIsSaved(false);
+  }
+
+  // 연봉 저장 핸들러
+  function handleSaveSalary() {
+    startTransition(async () => {
+      const result = await updateAnnualSalary(annualSalary);
+      if (result.success) {
+        setIsSaved(true);
+        setHasChanges(false);
+      }
+    });
+  }
 
   // 종합 세금 리포트 생성
   const taxReport: TotalTaxReport = generateTotalTaxReport(
@@ -96,7 +123,7 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
         return (
           <IsaIrpCalculator
             annualSalary={annualSalary}
-            onAnnualSalaryChange={setAnnualSalary}
+            onAnnualSalaryChange={handleSalaryChange}
             isaDeposit={isaDeposit}
             onIsaDepositChange={setIsaDeposit}
             irpDeposit={irpDeposit}
@@ -107,7 +134,7 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
         return (
           <IncomeTaxCalculator
             annualSalary={annualSalary}
-            onAnnualSalaryChange={setAnnualSalary}
+            onAnnualSalaryChange={handleSalaryChange}
             rentalIncome={initialData.rentalIncome}
           />
         );
@@ -127,7 +154,7 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
         return (
           <HealthInsuranceCalculator
             annualSalary={annualSalary}
-            onAnnualSalaryChange={setAnnualSalary}
+            onAnnualSalaryChange={handleSalaryChange}
             rentalIncome={initialData.rentalIncome}
             dividendIncome={initialData.dividendIncome}
           />
@@ -139,6 +166,55 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
 
   return (
     <div className="space-y-6">
+      {/* 연봉 저장 영역 */}
+      <Card className="border-border/60">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                <Wallet className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">기준 연봉 (세전)</p>
+                <p className="text-lg font-bold">{formatKRW(annualSalary)}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleSaveSalary}
+              disabled={isPending || (isSaved && !hasChanges)}
+              className={`
+                flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all
+                ${
+                  isSaved && !hasChanges
+                    ? "bg-emerald-500/10 text-emerald-500"
+                    : hasChanges
+                    ? "bg-blue-500 text-white hover:bg-blue-600"
+                    : "bg-muted text-muted-foreground"
+                }
+                disabled:cursor-not-allowed disabled:opacity-50
+              `}
+            >
+              {isPending ? (
+                <>
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  <span className="hidden sm:inline">저장 중...</span>
+                </>
+              ) : isSaved && !hasChanges ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  <span className="hidden sm:inline">저장됨</span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  <span className="hidden sm:inline">연봉 저장</span>
+                </>
+              )}
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* 요약 카드 */}
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <Card className="border-border/60">
