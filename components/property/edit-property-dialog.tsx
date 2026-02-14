@@ -4,8 +4,8 @@
 // 부동산 수정 다이얼로그
 // =========================================
 
-import { useState, useEffect } from "react";
-import { Building2 } from "lucide-react";
+import { useState, useEffect, useTransition } from "react";
+import { Building2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { updateProperty } from "@/app/actions/property-actions";
 import { toast } from "sonner";
+import { handleActionResult, toastMessages } from "@/lib/toast-helpers";
 import {
   PROPERTY_TYPE_LABELS,
   CONTRACT_TYPE_LABELS,
@@ -42,7 +43,7 @@ interface EditPropertyDialogProps {
 
 export function EditPropertyDialog({ property, open, onOpenChange }: EditPropertyDialogProps) {
   const [contractType, setContractType] = useState<ContractType>("OWNED");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   // property가 변경되면 contractType 업데이트
   useEffect(() => {
@@ -67,19 +68,19 @@ export function EditPropertyDialog({ property, open, onOpenChange }: EditPropert
 
   async function handleSubmit(formData: FormData) {
     if (!property) return;
-    setIsSubmitting(true);
     formData.set("id", property.id);
     const name = formData.get("name") as string;
-    const result = await updateProperty(formData);
-    setIsSubmitting(false);
+    
+    startTransition(async () => {
+      toast.loading(toastMessages.property.update.loading, { id: "update-property" });
+      const result = await updateProperty(formData);
 
-    if (!result.success) {
-      toast.error(result.error || "부동산 수정에 실패했습니다.");
-      return;
-    }
-
-    onOpenChange(false);
-    toast.success(`'${name}' 정보가 수정되었습니다.`);
+      if (handleActionResult(result, { 
+        success: `'${name}' 정보가 수정되었습니다` 
+      }, { id: "update-property" })) {
+        onOpenChange(false);
+      }
+    });
   }
 
   return (
@@ -300,11 +301,19 @@ export function EditPropertyDialog({ property, open, onOpenChange }: EditPropert
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={isPending}
             >
               취소
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "저장 중..." : "저장하기"}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  저장 중...
+                </>
+              ) : (
+                "저장하기"
+              )}
             </Button>
           </DialogFooter>
         </form>

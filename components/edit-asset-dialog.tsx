@@ -1,5 +1,7 @@
 "use client";
 
+import { useTransition } from "react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateAsset } from "@/app/actions/asset-actions";
 import { toast } from "sonner";
+import { handleActionResult, toastMessages } from "@/lib/toast-helpers";
 import type { Asset } from "@/types/asset";
 
 interface EditAssetDialogProps {
@@ -21,14 +24,19 @@ interface EditAssetDialogProps {
 }
 
 export function EditAssetDialog({ asset, onClose }: EditAssetDialogProps) {
+  const [isPending, startTransition] = useTransition();
+  
   async function handleUpdate(formData: FormData) {
-    const result = await updateAsset(formData);
-    if (!result.success) {
-      toast.error(result.error || "수정에 실패했습니다.");
-      return;
-    }
-    onClose();
-    toast.success("자산 정보가 수정되었습니다.");
+    startTransition(async () => {
+      toast.loading(toastMessages.asset.update.loading, { id: "update-asset" });
+      const result = await updateAsset(formData);
+      
+      if (handleActionResult(result, { 
+        success: toastMessages.asset.update.success 
+      }, { id: "update-asset" })) {
+        onClose();
+      }
+    });
   }
 
   return (
@@ -90,10 +98,19 @@ export function EditAssetDialog({ asset, onClose }: EditAssetDialogProps) {
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
                 취소
               </Button>
-              <Button type="submit">저장하기</Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    저장 중...
+                  </>
+                ) : (
+                  "저장하기"
+                )}
+              </Button>
             </DialogFooter>
           </form>
         )}

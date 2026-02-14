@@ -8,6 +8,7 @@ import { deleteAsset, refreshPrices } from "@/app/actions/asset-actions";
 import { formatKRW } from "@/lib/format";
 import { getProfitInfo } from "@/lib/asset-utils";
 import { toast } from "sonner";
+import { handleActionResult, toastMessages } from "@/lib/toast-helpers";
 import type { Asset } from "@/types/asset";
 
 export function AssetTable({ assets }: { assets: Asset[] }) {
@@ -17,23 +18,22 @@ export function AssetTable({ assets }: { assets: Asset[] }) {
 
   function handleDelete(asset: Asset) {
     startTransition(async () => {
+      toast.loading(toastMessages.asset.delete.loading, { id: `delete-${asset.id}` });
       const result = await deleteAsset(asset.id);
-      if (!result.success) {
-        toast.error(result.error || "삭제에 실패했습니다.");
-        return;
-      }
-      toast.success(`'${asset.name}' 자산이 삭제되었습니다.`);
+      handleActionResult(result, { 
+        success: `'${asset.name}' 자산이 삭제되었습니다` 
+      }, { id: `delete-${asset.id}` });
     });
   }
 
   function handleRefresh() {
     startRefresh(async () => {
+      toast.loading(toastMessages.asset.refresh.loading, { id: "refresh-prices" });
       const result = await refreshPrices();
-      if (!result.success) {
-        toast.error(result.error || "시세 업데이트에 실패했습니다.");
-        return;
-      }
-      toast.success("시세가 업데이트되었습니다.");
+      handleActionResult(result, { 
+        success: toastMessages.asset.refresh.success,
+        error: toastMessages.asset.refresh.error
+      }, { id: "refresh-prices" });
     });
   }
 

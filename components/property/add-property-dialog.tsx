@@ -4,8 +4,8 @@
 // 부동산 추가 다이얼로그
 // =========================================
 
-import { useState } from "react";
-import { Building2 } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Building2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { addProperty } from "@/app/actions/property-actions";
 import { toast } from "sonner";
+import { handleActionResult, toastMessages } from "@/lib/toast-helpers";
 import {
   PROPERTY_TYPE_LABELS,
   CONTRACT_TYPE_LABELS,
@@ -37,7 +38,7 @@ import {
 export function AddPropertyDialog() {
   const [open, setOpen] = useState(false);
   const [contractType, setContractType] = useState<ContractType>("OWNED");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   // 계약 유형에 따라 표시할 필드 결정
   const showRentalFields = contractType === "RENTAL_JEONSE" || contractType === "RENTAL_MONTHLY";
@@ -45,18 +46,18 @@ export function AddPropertyDialog() {
   const showMonthlyRent = contractType === "MONTHLY" || contractType === "RENTAL_MONTHLY";
 
   async function handleSubmit(formData: FormData) {
-    setIsSubmitting(true);
     const name = formData.get("name") as string;
-    const result = await addProperty(formData);
-    setIsSubmitting(false);
+    
+    startTransition(async () => {
+      toast.loading(toastMessages.property.add.loading, { id: "add-property" });
+      const result = await addProperty(formData);
 
-    if (!result.success) {
-      toast.error(result.error || "부동산 추가에 실패했습니다.");
-      return;
-    }
-
-    setOpen(false);
-    toast.success(`'${name}' 부동산이 추가되었습니다.`);
+      if (handleActionResult(result, { 
+        success: `'${name}' 부동산이 추가되었습니다` 
+      }, { id: "add-property" })) {
+        setOpen(false);
+      }
+    });
   }
 
   return (
@@ -287,11 +288,19 @@ export function AddPropertyDialog() {
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
+              disabled={isPending}
             >
               취소
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "추가 중..." : "추가하기"}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  추가 중...
+                </>
+              ) : (
+                "추가하기"
+              )}
             </Button>
           </DialogFooter>
         </form>

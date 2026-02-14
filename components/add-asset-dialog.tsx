@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Plus } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,20 +16,39 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { addAsset } from "@/app/actions/asset-actions";
 import { toast } from "sonner";
+import { handleActionResult, toastMessages, formatKRWWithUnit } from "@/lib/toast-helpers";
 
 export function AddAssetDialog() {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState("주식");
+  const [isPending, startTransition] = useTransition();
+  const [amountDisplay, setAmountDisplay] = useState("");
 
   async function handleSubmit(formData: FormData) {
     const name = formData.get("name") as string;
-    const result = await addAsset(formData);
-    if (!result.success) {
-      toast.error(result.error || "자산 추가에 실패했습니다.");
-      return;
+    
+    startTransition(async () => {
+      toast.loading(toastMessages.asset.add.loading, { id: "add-asset" });
+      
+      const result = await addAsset(formData);
+      
+      if (handleActionResult(result, { 
+        success: `'${name}' 자산이 추가되었습니다` 
+      }, { id: "add-asset" })) {
+        setOpen(false);
+        setAmountDisplay("");
+      }
+    });
+  }
+  
+  function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    const numValue = parseInt(value.replace(/[^0-9]/g, ""), 10);
+    if (!isNaN(numValue) && numValue > 0) {
+      setAmountDisplay(formatKRWWithUnit(numValue, { compact: true }));
+    } else {
+      setAmountDisplay("");
     }
-    setOpen(false);
-    toast.success(`'${name}' 자산이 추가되었습니다.`);
   }
 
   return (
@@ -92,8 +111,14 @@ export function AddAssetDialog() {
                 name="amount"
                 type="number"
                 placeholder="예: 50000000"
+                onChange={handleAmountChange}
                 required
               />
+              {amountDisplay && (
+                <p className="text-xs text-primary font-medium">
+                  ≈ {amountDisplay}
+                </p>
+              )}
               <input type="hidden" name="currentPrice" value="0" />
             </div>
           </div>
@@ -102,10 +127,20 @@ export function AddAssetDialog() {
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
+              disabled={isPending}
             >
               취소
             </Button>
-            <Button type="submit">추가하기</Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  추가 중...
+                </>
+              ) : (
+                "추가하기"
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

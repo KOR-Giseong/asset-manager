@@ -39,9 +39,17 @@ export default function RootLayout({
           {children}
           <Toaster
             position="bottom-right"
+            richColors
+            closeButton
+            duration={4000}
             toastOptions={{
               classNames: {
                 toast: "bg-card text-card-foreground border-border shadow-lg",
+                title: "font-semibold",
+                description: "text-muted-foreground",
+                success: "border-emerald-500/20 bg-emerald-500/10",
+                error: "border-red-500/20 bg-red-500/10",
+                loading: "border-blue-500/20 bg-blue-500/10",
               },
             }}
           />

@@ -39,6 +39,7 @@ import {
 } from "@/types/property";
 import { deleteProperty } from "@/app/actions/property-actions";
 import { toast } from "sonner";
+import { handleActionResult, toastMessages } from "@/lib/toast-helpers";
 import { PropertyMiniChart } from "./property-mini-chart";
 import { InvestmentTab } from "./detail-tabs/investment-tab";
 import { RentalTab } from "./detail-tabs/rental-tab";
@@ -80,13 +81,14 @@ export function PropertyDetailSheet({
     if (!confirm(`'${property.name}'을(를) 삭제하시겠습니까?`)) return;
 
     startTransition(async () => {
+      toast.loading(toastMessages.property.delete.loading, { id: `delete-property-${property.id}` });
       const result = await deleteProperty(property.id);
-      if (!result.success) {
-        toast.error(result.error || "삭제에 실패했습니다.");
-        return;
+      
+      if (handleActionResult(result, { 
+        success: `'${property.name}'이(가) 삭제되었습니다` 
+      }, { id: `delete-property-${property.id}` })) {
+        onOpenChange(false);
       }
-      toast.success(`'${property.name}'이(가) 삭제되었습니다.`);
-      onOpenChange(false);
     });
   }
 
