@@ -43,24 +43,24 @@ export function PropertyDashboard({ properties, totalAssetValue = 0 }: PropertyD
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10">
-            <Building2 className="h-5 w-5 text-emerald-500" />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 sm:h-10 sm:w-10">
+            <Building2 className="h-4 w-4 text-emerald-500 sm:h-5 sm:w-5" />
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">부동산 관리</h2>
-            <p className="text-sm text-muted-foreground">
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold text-foreground sm:text-lg">부동산 관리</h2>
+            <p className="truncate text-xs text-muted-foreground sm:text-sm">
               {summary.totalProperties}개 부동산 · 총 {formatKRW(summary.totalCurrentValue)}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {summary.expiringCount > 0 && (
-            <Badge variant="warning" className="gap-1">
-              <AlertTriangle className="h-3 w-3" />
+            <Badge variant="warning" className="gap-1 text-[10px] sm:text-xs">
+              <AlertTriangle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               만기 임박 {summary.expiringCount}건
             </Badge>
           )}
@@ -70,33 +70,33 @@ export function PropertyDashboard({ properties, totalAssetValue = 0 }: PropertyD
 
       {/* 포트폴리오 요약 카드 */}
       {properties.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
           <Card className="border-border/60">
-            <CardHeader className="pb-2">
-              <CardDescription>총 시가</CardDescription>
+            <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
+              <CardDescription className="text-[10px] sm:text-xs">총 시가</CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{formatKRW(summary.totalCurrentValue)}</p>
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+              <p className="text-base font-bold sm:text-2xl">{formatKRW(summary.totalCurrentValue)}</p>
             </CardContent>
           </Card>
 
           <Card className="border-border/60">
-            <CardHeader className="pb-2">
-              <CardDescription>총 순자산</CardDescription>
+            <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
+              <CardDescription className="text-[10px] sm:text-xs">총 순자산</CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className={`text-2xl font-bold ${summary.totalEquity >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+              <p className={`text-base font-bold sm:text-2xl ${summary.totalEquity >= 0 ? "text-emerald-500" : "text-red-500"}`}>
                 {formatKRW(summary.totalEquity)}
               </p>
             </CardContent>
           </Card>
 
           <Card className="border-border/60">
-            <CardHeader className="pb-2">
-              <CardDescription>월 현금흐름</CardDescription>
+            <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
+              <CardDescription className="text-[10px] sm:text-xs">월 현금흐름</CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className={`text-2xl font-bold ${summary.totalMonthlyCashFlow >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+              <p className={`text-base font-bold sm:text-2xl ${summary.totalMonthlyCashFlow >= 0 ? "text-emerald-500" : "text-red-500"}`}>
                 {summary.totalMonthlyCashFlow >= 0 ? "+" : ""}
                 {formatKRW(summary.totalMonthlyCashFlow)}
               </p>
@@ -104,11 +104,11 @@ export function PropertyDashboard({ properties, totalAssetValue = 0 }: PropertyD
           </Card>
 
           <Card className="border-border/60">
-            <CardHeader className="pb-2">
-              <CardDescription>평균 LTV</CardDescription>
+            <CardHeader className="p-3 pb-1 sm:p-4 sm:pb-2">
+              <CardDescription className="text-[10px] sm:text-xs">평균 LTV</CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className={`text-2xl font-bold ${summary.averageLTV >= 80 ? "text-red-500" : summary.averageLTV >= 70 ? "text-amber-500" : ""}`}>
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+              <p className={`text-base font-bold sm:text-2xl ${summary.averageLTV >= 80 ? "text-red-500" : summary.averageLTV >= 70 ? "text-amber-500" : ""}`}>
                 {summary.averageLTV.toFixed(1)}%
               </p>
             </CardContent>
@@ -119,19 +119,19 @@ export function PropertyDashboard({ properties, totalAssetValue = 0 }: PropertyD
       {/* 부동산 목록 */}
       {properties.length === 0 ? (
         <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Building2 className="h-12 w-12 text-muted-foreground/50" />
-            <h3 className="mt-4 text-lg font-medium">등록된 부동산이 없습니다</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
+          <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12">
+            <Building2 className="h-10 w-10 text-muted-foreground/50 sm:h-12 sm:w-12" />
+            <h3 className="mt-3 text-base font-medium sm:mt-4 sm:text-lg">등록된 부동산이 없습니다</h3>
+            <p className="mt-1 text-xs text-muted-foreground sm:mt-2 sm:text-sm">
               부동산을 추가하여 자산을 관리해보세요
             </p>
-            <div className="mt-4">
+            <div className="mt-3 sm:mt-4">
               <AddPropertyDialog />
             </div>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {properties.map((property) => (
             <PropertyCard
               key={property.id}

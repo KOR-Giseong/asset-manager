@@ -128,70 +128,68 @@ export function CashFlowCalendar({
   return (
     <>
       <Card className="border-border/60 shadow-sm">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/10">
-                <CalendarDays className="h-5 w-5 text-purple-500" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">현금흐름 캘린더</CardTitle>
-                <CardDescription>
-                  예정된 현금 유입을 확인하세요
-                </CardDescription>
-              </div>
+        <CardHeader className="pb-3 sm:pb-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 sm:h-10 sm:w-10">
+              <CalendarDays className="h-4 w-4 text-purple-500 sm:h-5 sm:w-5" />
+            </div>
+            <div className="min-w-0">
+              <CardTitle className="text-base sm:text-lg">현금흐름 캘린더</CardTitle>
+              <CardDescription className="hidden text-xs sm:block sm:text-sm">
+                예정된 현금 유입을 확인하세요
+              </CardDescription>
             </div>
           </div>
 
           {/* 월간 요약 */}
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
-              <p className="text-xs text-muted-foreground">월세 수입</p>
-              <p className="text-lg font-bold text-emerald-500">
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-4 sm:gap-3 lg:grid-cols-4">
+            <div className="rounded-lg border border-border/50 bg-muted/30 p-2 sm:p-3">
+              <p className="text-[10px] text-muted-foreground sm:text-xs">월세 수입</p>
+              <p className="text-sm font-bold text-emerald-500 sm:text-lg">
                 {formatKRW(summary.totalRent)}
               </p>
             </div>
-            <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
-              <p className="text-xs text-muted-foreground">배당금</p>
-              <p className="text-lg font-bold text-blue-500">
+            <div className="rounded-lg border border-border/50 bg-muted/30 p-2 sm:p-3">
+              <p className="text-[10px] text-muted-foreground sm:text-xs">배당금</p>
+              <p className="text-sm font-bold text-blue-500 sm:text-lg">
                 {formatKRW(summary.totalDividend)}
               </p>
             </div>
-            <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
-              <p className="text-xs text-muted-foreground">이자</p>
-              <p className="text-lg font-bold text-amber-500">
+            <div className="rounded-lg border border-border/50 bg-muted/30 p-2 sm:p-3">
+              <p className="text-[10px] text-muted-foreground sm:text-xs">이자</p>
+              <p className="text-sm font-bold text-amber-500 sm:text-lg">
                 {formatKRW(summary.totalInterest)}
               </p>
             </div>
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
-              <p className="text-xs text-muted-foreground">총 유입</p>
-              <p className="text-lg font-bold text-primary">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-2 sm:p-3">
+              <p className="text-[10px] text-muted-foreground sm:text-xs">총 유입</p>
+              <p className="text-sm font-bold text-primary sm:text-lg">
                 {formatKRW(summary.totalCashFlow)}
               </p>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="px-3 sm:px-6">
           {/* 월 네비게이션 */}
-          <div className="mb-4 flex items-center justify-between">
-            <Button variant="ghost" size="icon" onClick={goToPreviousMonth}>
-              <ChevronLeft className="h-5 w-5" />
+          <div className="mb-3 flex items-center justify-between sm:mb-4">
+            <Button variant="ghost" size="icon" onClick={goToPreviousMonth} className="h-8 w-8 sm:h-10 sm:w-10">
+              <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            <h3 className="text-lg font-semibold">
+            <h3 className="text-base font-semibold sm:text-lg">
               {currentYear}년 {currentMonth}월
             </h3>
-            <Button variant="ghost" size="icon" onClick={goToNextMonth}>
-              <ChevronRight className="h-5 w-5" />
+            <Button variant="ghost" size="icon" onClick={goToNextMonth} className="h-8 w-8 sm:h-10 sm:w-10">
+              <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </div>
 
           {/* 요일 헤더 */}
-          <div className="mb-2 grid grid-cols-7 gap-1">
+          <div className="mb-1 grid grid-cols-7 gap-0.5 sm:mb-2 sm:gap-1">
             {WEEKDAYS.map((day, index) => (
               <div
                 key={day}
-                className={`py-2 text-center text-xs font-medium ${
+                className={`py-1 text-center text-[10px] font-medium sm:py-2 sm:text-xs ${
                   index === 0 ? "text-red-500" : index === 6 ? "text-blue-500" : "text-muted-foreground"
                 }`}
               >
@@ -201,7 +199,7 @@ export function CashFlowCalendar({
           </div>
 
           {/* 달력 그리드 */}
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
             {calendarDays.map((day, index) => {
               if (day === null) {
                 return <div key={`empty-${index}`} className="aspect-square" />;
@@ -220,14 +218,14 @@ export function CashFlowCalendar({
                   onClick={() => handleDayClick(day)}
                   disabled={!hasEvents}
                   className={`
-                    relative aspect-square rounded-lg border p-1 text-sm transition-all
-                    ${hasEvents ? "cursor-pointer hover:border-primary hover:bg-accent" : "cursor-default"}
-                    ${isToday ? "border-primary bg-primary/5" : "border-transparent"}
+                    relative aspect-square rounded-md p-0.5 text-xs transition-all sm:rounded-lg sm:p-1 sm:text-sm
+                    ${hasEvents ? "cursor-pointer border hover:border-primary hover:bg-accent" : "cursor-default border-transparent"}
+                    ${isToday ? "border border-primary bg-primary/5" : ""}
                   `}
                 >
                   <span
                     className={`
-                      absolute left-1 top-1 text-xs font-medium
+                      absolute left-0.5 top-0.5 text-[10px] font-medium sm:left-1 sm:top-1 sm:text-xs
                       ${index % 7 === 0 ? "text-red-500" : index % 7 === 6 ? "text-blue-500" : "text-foreground"}
                     `}
                   >
@@ -235,21 +233,22 @@ export function CashFlowCalendar({
                   </span>
 
                   {hasEvents && (
-                    <div className="absolute bottom-1 left-1 right-1 flex flex-col gap-0.5">
-                      {events.slice(0, 2).map((event) => {
+                    <div className="absolute bottom-0.5 left-0.5 right-0.5 flex flex-col gap-0.5 sm:bottom-1 sm:left-1 sm:right-1">
+                      {events.slice(0, 1).map((event) => {
                         const colors = TYPE_COLORS[event.type];
                         return (
                           <div
                             key={event.id}
-                            className={`truncate rounded px-1 py-0.5 text-[10px] font-medium ${colors.bg} ${colors.text}`}
+                            className={`truncate rounded px-0.5 py-0.5 text-[8px] font-medium sm:px-1 sm:text-[10px] ${colors.bg} ${colors.text}`}
                           >
-                            {formatKRW(event.amount).replace("원", "")}
+                            <span className="hidden sm:inline">{formatKRW(event.amount).replace("원", "")}</span>
+                            <span className="sm:hidden">{(event.amount / 10000).toFixed(0)}</span>
                           </div>
                         );
                       })}
-                      {events.length > 2 && (
-                        <span className="text-[10px] text-muted-foreground">
-                          +{events.length - 2}
+                      {events.length > 1 && (
+                        <span className="text-[8px] text-muted-foreground sm:text-[10px]">
+                          +{events.length - 1}
                         </span>
                       )}
                     </div>
@@ -260,16 +259,16 @@ export function CashFlowCalendar({
           </div>
 
           {/* 범례 */}
-          <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-border/50 pt-4">
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-2 border-t border-border/50 pt-3 sm:mt-4 sm:gap-4 sm:pt-4">
             {Object.entries(TYPE_COLORS).map(([type, colors]) => {
               const Icon = TYPE_ICONS[type];
               const label = type === "rent" ? "월세" : type === "dividend" ? "배당금" : "이자";
               return (
-                <div key={type} className="flex items-center gap-1.5">
-                  <div className={`rounded p-1 ${colors.bg}`}>
-                    <Icon className={`h-3 w-3 ${colors.text}`} />
+                <div key={type} className="flex items-center gap-1">
+                  <div className={`rounded p-0.5 sm:p-1 ${colors.bg}`}>
+                    <Icon className={`h-2.5 w-2.5 sm:h-3 sm:w-3 ${colors.text}`} />
                   </div>
-                  <span className="text-xs text-muted-foreground">{label}</span>
+                  <span className="text-[10px] text-muted-foreground sm:text-xs">{label}</span>
                 </div>
               );
             })}

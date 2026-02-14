@@ -64,7 +64,7 @@ export function EditAssetDialog({ asset, onClose }: EditAssetDialogProps) {
                 <select
                   id="edit-type"
                   name="type"
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="flex h-11 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:h-10 sm:text-sm"
                   defaultValue={asset.type}
                 >
                   <option value="주식">주식</option>

@@ -102,18 +102,18 @@ export default async function Home() {
   return (
     <SidebarLayout>
       <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           {/* Header */}
-          <div className="mb-8 flex items-center justify-between">
+          <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
             <div className="pl-12 md:pl-0">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
                 대시보드
               </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
                 나의 자산 현황을 한눈에 확인하세요
               </p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <RefreshButton />
               <AddAssetDialog />
               <UserNav user={session.user} />
@@ -121,39 +121,39 @@ export default async function Home() {
           </div>
 
           {/* 총 자산 + 도넛 차트 */}
-          <div className="mb-6 grid gap-6 lg:grid-cols-2">
+          <div className="mb-4 grid gap-4 sm:mb-6 sm:gap-6 lg:grid-cols-2">
             <Card className="border-border/60 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardDescription className="text-sm font-medium text-muted-foreground">
+              <CardHeader className="p-4 pb-2 sm:p-6 sm:pb-2">
+                <CardDescription className="text-xs font-medium text-muted-foreground sm:text-sm">
                   총 자산
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold tracking-tight text-foreground">
+                  <span className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
                     {formatKRW(totalAssets)}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
                   {assets.length}개 자산 + {properties.length}개 부동산 보유 중
                 </p>
               </CardContent>
             </Card>
 
             <Card className="border-border/60 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardDescription className="text-sm font-medium text-muted-foreground">
+              <CardHeader className="p-4 pb-2 sm:p-6 sm:pb-2">
+                <CardDescription className="text-xs font-medium text-muted-foreground sm:text-sm">
                   자산 비중
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
                 <AssetChart data={chartData} />
               </CardContent>
             </Card>
           </div>
 
           {/* 카테고리별 카드 */}
-          <div className="mb-6 grid gap-4 sm:grid-cols-3">
+          <div className="mb-4 grid grid-cols-1 gap-3 sm:mb-6 sm:grid-cols-3 sm:gap-4">
             {CATEGORIES.map((cat) => {
               const amount = cat.name === "부동산"
                 ? (categoryTotals[cat.name] || 0) + propertySummary.totalCurrentValue
@@ -164,16 +164,16 @@ export default async function Home() {
 
               return (
                 <Card key={cat.name} className="border-border/60 shadow-sm transition-shadow hover:shadow-md">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardDescription className="text-sm font-medium text-muted-foreground">
+                  <CardHeader className="flex flex-row items-center justify-between p-3 pb-2 sm:p-6 sm:pb-2">
+                    <CardDescription className="text-xs font-medium text-muted-foreground sm:text-sm">
                       {cat.name}
                     </CardDescription>
-                    <div className={`rounded-lg p-2 ${cat.bg}`}>
-                      <Icon className={`h-4 w-4 ${cat.color}`} />
+                    <div className={`rounded-lg p-1.5 sm:p-2 ${cat.bg}`}>
+                      <Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${cat.color}`} />
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-foreground">
+                  <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+                    <div className="truncate text-lg font-bold text-foreground sm:text-2xl">
                       {formatKRW(amount)}
                     </div>
                     <div className="mt-2 flex items-center gap-2">
@@ -183,7 +183,7 @@ export default async function Home() {
                           style={{ width: `${ratio}%`, backgroundColor: CHART_COLORS[cat.name] }}
                         />
                       </div>
-                      <span className="text-xs font-medium text-muted-foreground">
+                      <span className="text-[10px] font-medium text-muted-foreground sm:text-xs">
                         {ratio.toFixed(1)}%
                       </span>
                     </div>
@@ -194,23 +194,23 @@ export default async function Home() {
           </div>
 
           {/* 자산 추이 선 그래프 */}
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <AssetTrendChart />
           </div>
 
           {/* 자산 목록 */}
           <Card className="border-border/60 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">자산 목록</CardTitle>
-              <CardDescription>등록된 자산 내역입니다.</CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">자산 목록</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">등록된 자산 내역입니다.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               <AssetTable assets={assets} />
             </CardContent>
           </Card>
 
           {/* 부동산 요약 */}
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-6">
             <PropertySummaryCard
               summary={propertySummary}
               propertyCount={properties.length}
