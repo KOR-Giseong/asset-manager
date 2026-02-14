@@ -18,6 +18,7 @@ import {
   X,
   ChevronLeft,
   Wallet,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,13 @@ const MENU_ITEMS: MenuItem[] = [
     href: "/property",
     icon: Building2,
     description: "부동산 포트폴리오",
+  },
+  {
+    id: "tax",
+    label: "세금/절세",
+    href: "/tax",
+    icon: ShieldCheck,
+    description: "세금 계산 및 절세 전략",
   },
 ];
 
