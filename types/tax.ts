@@ -13,6 +13,85 @@ export interface TaxCalculationResult {
 }
 
 // =========================================
+// 세금 설정 타입 (연도별 교체 가능)
+// =========================================
+
+/** 장기보유특별공제율 */
+export interface LongTermDeductionRate {
+  years: number;
+  rate: number;
+}
+
+/** 세법별 한도/기준값 */
+export interface TaxLimits {
+  irpMaxDeposit: number;                    // IRP 최대 납입액 (900만원)
+  isaMaxDeposit: number;                    // ISA 최대 납입액 (2,000만원)
+  isaNonTaxableGeneral: number;             // ISA 비과세 한도 - 일반 (200만원)
+  isaNonTaxableLowIncome: number;           // ISA 비과세 한도 - 서민형 (400만원)
+  lowIncomeSalaryThreshold: number;         // ISA 서민형 기준 연봉 (5,000만원)
+  irpLowIncomeThreshold: number;            // IRP 세액공제율 기준 연봉 (5,500만원)
+  irpDeductionRateHigh: number;             // IRP 세액공제율 - 고소득 (13.2%)
+  irpDeductionRateLow: number;              // IRP 세액공제율 - 저소득 (16.5%)
+  isaNormalTaxRate: number;                 // ISA 일반과세율 (15.4%)
+  isaSeparateTaxRate: number;               // ISA 분리과세율 (9.9%)
+  oneHomeTaxExemptLimit: number;            // 1주택 비과세 기준 (12억원)
+  oneHomeMinHoldingYears: number;           // 1주택 비과세 최소 보유기간 (2년)
+  basicDeduction: number;                   // 기본공제 (150만원)
+  capitalGainsBasicDeduction: number;       // 양도소득 기본공제 (250만원)
+  foreignStockBasicDeduction: number;       // 해외주식 기본공제 (250만원)
+  foreignStockTaxRate: number;              // 해외주식 양도세율 (22%)
+  localTaxRate: number;                     // 지방소득세율 (10%)
+  healthInsuranceNonSalaryThreshold: number; // 건보료 추가부과 기준 (2,000만원)
+  rentalExpenseRate: number;                // 임대소득 필요경비율 (50%)
+  localEducationTaxRate: number;            // 지방교육세율 (10%)
+  specialTaxRate: number;                   // 농어촌특별세율 (10%)
+  specialTaxAreaThreshold: number;          // 농어촌특별세 면적 기준 (85㎡)
+  lifeFirstHomeExemptPriceLimit: number;    // 생애최초 취득세 면제 가격 한도 (6억원)
+  lifeFirstHomeExemptAreaLimit: number;     // 생애최초 취득세 면제 면적 한도 (85㎡)
+}
+
+/** 연도별 세금 설정 (세율, 구간, 한도 통합) */
+export interface TaxConfig {
+  year: number;
+  incomeTaxBrackets: TaxBracket[];
+  capitalGainsTaxBrackets: TaxBracket[];
+  longTermDeductionRates: LongTermDeductionRate[];
+  healthInsuranceRate: number;
+  longTermCareRate: number;
+  incomeMonthlyInsuranceRate: number;
+  limits: TaxLimits;
+}
+
+// =========================================
+// 세금 센터 초기 데이터 (서버 → 클라이언트)
+// =========================================
+
+/** 세금 페이지에 전달되는 자산 요약 데이터 */
+export interface TaxInitialData {
+  propertyValue: number;
+  propertyPurchasePrice: number;
+  rentalIncome: number;
+  stockValue: number;
+  foreignStockValue: number;
+  depositValue: number;
+  dividendIncome: number;
+  interestIncome: number;
+  totalAssets: number;
+  savedAnnualSalary: number | null;
+}
+
+/** 종합 세금 리포트 생성용 통합 입력 */
+export interface TotalTaxReportInput {
+  annualSalary: number;
+  rentalIncome: number;
+  propertyValue: number;
+  stockValue: number;
+  foreignStockGain: number;
+  isaDeposit?: number;
+  irpDeposit?: number;
+}
+
+// =========================================
 // ISA/IRP 절세 관련
 // =========================================
 
@@ -70,7 +149,7 @@ export interface IncomeTaxResult {
   totalTax: number; // 총 납부세액
 }
 
-// 2026년 종합소득세율 구간
+/** 세율 구간 (종합소득세, 양도소득세 공통) */
 export interface TaxBracket {
   min: number;
   max: number;
@@ -165,15 +244,22 @@ export interface HealthInsuranceResult {
 // 종합 세금 리포트
 // =========================================
 
+/** 세금 내역 항목 (절세 전/후 비교용) */
+export interface TaxBreakdown {
+  incomeTax: number;
+  healthInsurance: number;
+  foreignStockTax: number;
+}
+
+/** 절세 전략별 절감액 */
+export interface TaxSavingStrategies {
+  isaIrpSaving: number;
+  rentalDeductionSaving: number;
+  otherSaving: number;
+}
+
 export interface TotalTaxReport {
-  // 입력값
-  input: {
-    annualSalary: number;
-    rentalIncome: number;
-    propertyValue: number;
-    stockValue: number;
-    foreignStockGain: number;
-  };
+  input: Pick<TotalTaxReportInput, "annualSalary" | "rentalIncome" | "propertyValue" | "stockValue" | "foreignStockGain">;
   
   // 세금 항목별 결과
   incomeTax: IncomeTaxResult;
@@ -182,25 +268,13 @@ export interface TotalTaxReport {
   // 절세 전/후 비교
   beforeOptimization: {
     totalTax: number;
-    breakdown: {
-      incomeTax: number;
-      healthInsurance: number;
-      foreignStockTax: number;
-    };
+    breakdown: TaxBreakdown;
   };
-  
+
   afterOptimization: {
     totalTax: number;
-    breakdown: {
-      incomeTax: number;
-      healthInsurance: number;
-      foreignStockTax: number;
-    };
-    strategies: {
-      isaIrpSaving: number;
-      rentalDeductionSaving: number;
-      otherSaving: number;
-    };
+    breakdown: TaxBreakdown;
+    strategies: TaxSavingStrategies;
   };
   
   totalSaving: number; // 총 절세 금액

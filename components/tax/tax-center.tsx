@@ -25,7 +25,7 @@ import { TaxComparisonChart } from "./tax-comparison-chart";
 import { TaxPieChart } from "./tax-pie-chart";
 import { generateTotalTaxReport, generateComparisonChartData, generatePieChartData } from "@/services/taxService";
 import { updateAnnualSalary } from "@/app/actions/tax-actions";
-import type { TotalTaxReport, TaxComparisonData, TaxPieData } from "@/types/tax";
+import type { TotalTaxReport, TaxComparisonData, TaxPieData, TaxInitialData } from "@/types/tax";
 import { formatKRW } from "@/lib/format";
 
 // =========================================
@@ -33,18 +33,7 @@ import { formatKRW } from "@/lib/format";
 // =========================================
 
 interface TaxCenterProps {
-  initialData: {
-    propertyValue: number;
-    propertyPurchasePrice: number;
-    rentalIncome: number;
-    stockValue: number;
-    foreignStockValue: number;
-    depositValue: number;
-    dividendIncome: number;
-    interestIncome: number;
-    totalAssets: number;
-    savedAnnualSalary: number | null;
-  };
+  initialData: TaxInitialData;
 }
 
 type TabId = "isa-irp" | "income" | "property" | "foreign-stock" | "health";
@@ -99,15 +88,15 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
   }
 
   // 종합 세금 리포트 생성
-  const taxReport: TotalTaxReport = generateTotalTaxReport(
+  const taxReport: TotalTaxReport = generateTotalTaxReport({
     annualSalary,
-    initialData.rentalIncome,
-    initialData.propertyValue,
-    initialData.stockValue,
-    initialData.foreignStockValue * 0.1, // 예상 수익 10%
+    rentalIncome: initialData.rentalIncome,
+    propertyValue: initialData.propertyValue,
+    stockValue: initialData.stockValue,
+    foreignStockGain: initialData.foreignStockValue * 0.1, // 예상 수익 10%
     isaDeposit,
-    irpDeposit
-  );
+    irpDeposit,
+  });
 
   // 차트 데이터
   const comparisonData: TaxComparisonData[] = generateComparisonChartData(taxReport);

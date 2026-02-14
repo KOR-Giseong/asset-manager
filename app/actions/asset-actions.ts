@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { fetchPrice } from "@/services/price-service";
 import * as assetRepo from "@/repositories/asset-repository";
 import * as userRepo from "@/repositories/user-repository";
-import type { Asset, ActionResult } from "@/types/asset";
+import type { Asset, AssetCategory, ActionResult } from "@/types/asset";
 
 async function getCurrentUserId(): Promise<string | null> {
   try {
@@ -40,9 +40,9 @@ export async function addAsset(formData: FormData): Promise<ActionResult> {
   if (!userId) return { success: false, error: "로그인이 필요합니다." };
 
   const name = formData.get("name") as string;
-  const type = formData.get("type") as string;
+  const type = formData.get("type") as AssetCategory;
   const symbol = (formData.get("symbol") as string) || null;
-  
+
   // 주식: 매수 단가 * 수량으로 amount 계산
   // 비주식: 직접 입력된 amount 사용
   let amount: number;
@@ -117,7 +117,7 @@ export async function updateAsset(formData: FormData): Promise<ActionResult> {
 
   const id = formData.get("id") as string;
   const name = formData.get("name") as string;
-  const type = formData.get("type") as string;
+  const type = formData.get("type") as AssetCategory;
   const symbol = (formData.get("symbol") as string) || null;
 
   if (!id || !name || !type) {

@@ -17,7 +17,7 @@ import { updateAsset } from "@/app/actions/asset-actions";
 import { toast } from "sonner";
 import { handleActionResult, toastMessages } from "@/lib/toast-helpers";
 import { formatKRWWithUnit } from "@/lib/format";
-import type { Asset } from "@/types/asset";
+import type { Asset, AssetCategory } from "@/types/asset";
 
 interface EditAssetDialogProps {
   asset: Asset | null;
@@ -92,7 +92,7 @@ export function EditAssetDialog({ asset, onClose }: EditAssetDialogProps) {
                   name="type"
                   className="flex h-11 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:h-10 sm:text-sm"
                   value={type}
-                  onChange={(e) => setType(e.target.value)}
+                  onChange={(e) => setType(e.target.value as AssetCategory)}
                 >
                   <option value="주식">주식</option>
                   <option value="부동산">부동산</option>

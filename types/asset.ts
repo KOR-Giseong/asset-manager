@@ -3,7 +3,7 @@ export type AssetCategory = "주식" | "부동산" | "예적금";
 export interface Asset {
   id: string;
   name: string;
-  type: string;
+  type: AssetCategory;
   amount: number;         // 총 매수 금액
   currentPrice: number;   // 총 평가 금액
   symbol: string | null;
@@ -41,7 +41,7 @@ export interface ProfitInfo {
 
 export interface CreateAssetInput {
   name: string;
-  type: string;
+  type: AssetCategory;
   amount: number;
   currentPrice: number;
   symbol: string | null;
@@ -52,7 +52,7 @@ export interface CreateAssetInput {
 
 export interface UpdateAssetInput {
   name: string;
-  type: string;
+  type: AssetCategory;
   amount: number;
   currentPrice: number;
   symbol: string | null;
