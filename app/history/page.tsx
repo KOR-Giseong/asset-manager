@@ -44,9 +44,9 @@ export default function HistoryPage() {
   return (
     <SidebarLayout>
       <div className="container max-w-5xl py-6">
-        <header className="mb-6">
-          <h1 className="text-2xl font-bold">자산 히스토리</h1>
-          <p className="text-muted-foreground">
+        <header className="mb-6 pl-12 md:pl-0">
+          <h1 className="text-xl font-bold sm:text-2xl">자산 히스토리</h1>
+          <p className="text-xs text-muted-foreground sm:text-sm">
             날짜별 자산 변동 추이를 확인하세요.
           </p>
         </header>

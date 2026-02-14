@@ -113,7 +113,7 @@ export default async function Home() {
                 나의 자산 현황을 한눈에 확인하세요
               </p>
             </div>
-            <div className="flex items-center gap-2 sm:gap-4">
+            <div className="ml-auto flex items-center gap-2 sm:gap-4">
               <RefreshButton />
               <AddAssetDialog />
               <UserNav user={session.user} />
