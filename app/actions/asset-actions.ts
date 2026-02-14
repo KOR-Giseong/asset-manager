@@ -14,7 +14,16 @@ async function getCurrentUserId(): Promise<string> {
   return session.user.id;
 }
 
-export async function getAssets() {
+export type Asset = {
+  id: string;
+  name: string;
+  type: string;
+  amount: number;
+  currentPrice: number;
+  userId: string;
+};
+
+export async function getAssets(): Promise<Asset[]> {
   const userId = await getCurrentUserId();
 
   const assets = await prisma.asset.findMany({

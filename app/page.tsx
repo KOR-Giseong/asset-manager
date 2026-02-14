@@ -10,7 +10,7 @@ import { AddAssetDialog } from "@/components/add-asset-dialog";
 import { AssetChart } from "@/components/asset-chart";
 import { AssetTable } from "@/components/asset-table";
 import { UserNav } from "@/components/user-nav";
-import { getAssets } from "@/app/actions/asset-actions";
+import { getAssets, type Asset } from "@/app/actions/asset-actions";
 import { auth } from "@/auth";
 import { LoginButton } from "@/components/login-button";
 
@@ -61,10 +61,10 @@ export default async function Home() {
 
   const assets = await getAssets();
 
-  const totalAssets = assets.reduce((sum, a) => sum + a.amount, 0);
+  const totalAssets = assets.reduce((sum: number, a: Asset) => sum + a.amount, 0);
 
   const categoryTotals = assets.reduce(
-    (acc, a) => {
+    (acc: Record<string, number>, a: Asset) => {
       acc[a.type] = (acc[a.type] || 0) + a.amount;
       return acc;
     },
