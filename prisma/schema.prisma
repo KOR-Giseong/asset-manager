@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String     @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?    @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
   assets        Asset[]
+  properties    Property[]
 }
 
 model Account {
@@ -73,4 +74,64 @@ model Transaction {
   date     DateTime @default(now())
   assetId  String
   asset    Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+}
+
+// =========================================
+// 부동산 전용 모델
+// =========================================
+
+model Property {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 기본 정보
+  name         String // 자산명 (예: 강남 아파트)
+  propertyType PropertyType // 아파트, 빌라, 오피스텔, 상가
+  contractType ContractType // 자가, 전세, 월세(임대중)
+  address      String // 주소
+
+  // 가격 정보
+  purchasePrice   Float // 매수 가격
+  currentPrice    Float // 현재 시세
+  acquisitionCost Float @default(0) // 취득세 및 부대비용
+
+  // 대출 정보
+  loanPrincipal    Float @default(0) // 대출 원금
+  loanInterestRate Float @default(0) // 대출 이자율 (연 %)
+  
+  // 임대 정보 (임대인/임차인 관점)
+  deposit        Float @default(0) // 보증금 (전세금 또는 월세 보증금)
+  monthlyRent    Float @default(0) // 월세 수입/지출
+  maintenanceFee Float @default(0) // 관리비
+  
+  // 계약 정보
+  contractStartDate DateTime? // 계약 시작일
+  contractEndDate   DateTime? // 계약 만기일
+
+  // 메모
+  notes String? @db.Text
+
+  // 관계
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum PropertyType {
+  APARTMENT  // 아파트
+  VILLA      // 빌라/다세대
+  OFFICETEL  // 오피스텔
+  COMMERCIAL // 상가
+  LAND       // 토지
+  OTHER      // 기타
+}
+
+enum ContractType {
+  OWNED       // 자가 (소유)
+  JEONSE      // 전세 (임차인)
+  MONTHLY     // 월세 (임차인)
+  RENTAL_JEONSE  // 전세 놓음 (임대인)
+  RENTAL_MONTHLY // 월세 놓음 (임대인)
 }

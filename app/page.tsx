@@ -11,11 +11,14 @@ import { AssetChart } from "@/components/asset-chart";
 import { AssetTable } from "@/components/asset-table";
 import { RefreshButton } from "@/components/refresh-button";
 import { UserNav } from "@/components/user-nav";
+import { PropertyDashboard } from "@/components/property";
 import { getAssets } from "@/app/actions/asset-actions";
+import { getProperties } from "@/app/actions/property-actions";
 import { auth } from "@/auth";
 import { LoginButton } from "@/components/login-button";
 import { formatKRW } from "@/lib/format";
 import { calculateTotalAssets, calculateCategoryTotals } from "@/lib/asset-utils";
+import { calculatePortfolioSummary } from "@/services/propertyService";
 import type { AssetCategory, ChartDataItem } from "@/types/asset";
 
 const CHART_COLORS: Record<AssetCategory, string> = {
@@ -62,12 +65,23 @@ export default async function Home() {
   }
 
   const assets = await getAssets();
-  const totalAssets = calculateTotalAssets(assets);
+  const properties = await getProperties();
+  
+  // 자산 계산
+  const assetTotal = calculateTotalAssets(assets);
   const categoryTotals = calculateCategoryTotals(assets);
+  
+  // 부동산 포트폴리오 계산
+  const propertySummary = calculatePortfolioSummary(properties);
+  
+  // 총 자산 = 주식/예적금 + 부동산 순자산
+  const totalAssets = assetTotal + propertySummary.totalEquity;
 
   const chartData: ChartDataItem[] = CATEGORIES.map((cat) => ({
     name: cat.name,
-    value: categoryTotals[cat.name] || 0,
+    value: cat.name === "부동산" 
+      ? (categoryTotals[cat.name] || 0) + propertySummary.totalCurrentValue
+      : categoryTotals[cat.name] || 0,
     color: CHART_COLORS[cat.name],
   }));
 
@@ -106,7 +120,7 @@ export default async function Home() {
                 </span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {assets.length}개 자산 보유 중
+                {assets.length}개 자산 + {properties.length}개 부동산 보유 중
               </p>
             </CardContent>
           </Card>
@@ -126,8 +140,12 @@ export default async function Home() {
         {/* 카테고리별 카드 */}
         <div className="mb-6 grid gap-4 sm:grid-cols-3">
           {CATEGORIES.map((cat) => {
-            const amount = categoryTotals[cat.name] || 0;
-            const ratio = totalAssets > 0 ? (amount / totalAssets) * 100 : 0;
+            // 부동산 카테고리는 Property 모델 데이터도 합산
+            const amount = cat.name === "부동산"
+              ? (categoryTotals[cat.name] || 0) + propertySummary.totalCurrentValue
+              : categoryTotals[cat.name] || 0;
+            const chartTotal = chartData.reduce((sum, d) => sum + d.value, 0);
+            const ratio = chartTotal > 0 ? (amount / chartTotal) * 100 : 0;
             const Icon = cat.icon;
 
             return (
@@ -171,6 +189,14 @@ export default async function Home() {
             <AssetTable assets={assets} />
           </CardContent>
         </Card>
+
+        {/* 부동산 관리 섹션 */}
+        <div className="mt-8">
+          <PropertyDashboard 
+            properties={properties} 
+            totalAssetValue={assetTotal} 
+          />
+        </div>
       </div>
     </div>
   );
