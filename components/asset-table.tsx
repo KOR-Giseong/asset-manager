@@ -139,7 +139,9 @@ export function AssetTable({ assets }: { assets: Asset[] }) {
                   </td>
                   <td className="py-3 text-right font-medium">
                     {asset.currentPrice > 0 ? formatKRW(asset.currentPrice) : (
-                      <span className="text-muted-foreground">—</span>
+                      <span className="text-muted-foreground">
+                        {asset.symbol ? "N/A" : "—"}
+                      </span>
                     )}
                   </td>
                   <td className="py-3 text-right">
@@ -157,7 +159,9 @@ export function AssetTable({ assets }: { assets: Asset[] }) {
                         {profit.rate.toFixed(2)}%
                       </span>
                     ) : (
-                      <span className="text-muted-foreground">—</span>
+                      <span className="text-muted-foreground">
+                        {asset.symbol ? "N/A" : "—"}
+                      </span>
                     )}
                   </td>
                   <td className="py-3 text-right">

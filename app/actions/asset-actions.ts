@@ -49,12 +49,21 @@ export async function addAsset(formData: FormData) {
     throw new Error("잘못된 입력입니다.");
   }
 
+  // symbol이 있으면 즉시 시세 조회
+  let resolvedPrice = currentPrice;
+  if (symbol) {
+    const livePrice = await fetchPrice(symbol);
+    if (livePrice !== null) {
+      resolvedPrice = livePrice;
+    }
+  }
+
   await prisma.asset.create({
     data: {
       name,
       type,
       amount,
-      currentPrice,
+      currentPrice: resolvedPrice,
       symbol,
       userId,
     },
@@ -119,9 +128,11 @@ async function fetchStockPrice(symbol: string): Promise<number | null> {
   try {
     const result = await yahooFinance.quote(symbol) as Record<string, unknown>;
     const price = result?.regularMarketPrice;
-    return typeof price === "number" ? price : null;
-  } catch {
-    console.error(`주식 시세 조회 실패: ${symbol}`);
+    if (typeof price === "number") return price;
+    console.error(`주식 시세 파싱 실패 (${symbol}):`, result);
+    return null;
+  } catch (err) {
+    console.error(`주식 시세 조회 실패 (${symbol}):`, err);
     return null;
   }
 }
@@ -133,13 +144,24 @@ async function fetchCryptoPrice(symbol: string): Promise<number | null> {
       `https://api.upbit.com/v1/ticker?markets=${market}`,
       { cache: "no-store" }
     );
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`코인 API 응답 실패 (${symbol}): ${res.status}`);
+      return null;
+    }
     const data = await res.json();
-    return data[0]?.trade_price ?? null;
-  } catch {
-    console.error(`코인 시세 조회 실패: ${symbol}`);
+    const price = data[0]?.trade_price;
+    if (typeof price === "number") return price;
+    console.error(`코인 시세 파싱 실패 (${symbol}):`, data);
+    return null;
+  } catch (err) {
+    console.error(`코인 시세 조회 실패 (${symbol}):`, err);
     return null;
   }
+}
+
+async function fetchPrice(symbol: string): Promise<number | null> {
+  const isStock = symbol.includes(".");
+  return isStock ? fetchStockPrice(symbol) : fetchCryptoPrice(symbol);
 }
 
 export async function refreshPrices() {
@@ -155,10 +177,7 @@ export async function refreshPrices() {
   for (const asset of assets) {
     if (!asset.symbol) continue;
 
-    const isStock = asset.symbol.includes(".");
-    const price = isStock
-      ? await fetchStockPrice(asset.symbol)
-      : await fetchCryptoPrice(asset.symbol);
+    const price = await fetchPrice(asset.symbol);
 
     if (price !== null) {
       await prisma.asset.update({

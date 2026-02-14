@@ -9,6 +9,7 @@ import {
 import { AddAssetDialog } from "@/components/add-asset-dialog";
 import { AssetChart } from "@/components/asset-chart";
 import { AssetTable } from "@/components/asset-table";
+import { RefreshButton } from "@/components/refresh-button";
 import { UserNav } from "@/components/user-nav";
 import { getAssets, type Asset } from "@/app/actions/asset-actions";
 import { auth } from "@/auth";
@@ -100,6 +101,7 @@ export default async function Home() {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <RefreshButton />
             <AddAssetDialog />
             <UserNav user={session.user} />
           </div>
