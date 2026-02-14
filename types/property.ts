@@ -119,6 +119,17 @@ export interface PropertyInvestmentSummary {
   isExpiryWarning: boolean;        // 만기 3개월 미만 경고
 }
 
+// 전체 포트폴리오 요약
+export interface PortfolioSummary {
+  totalProperties: number;
+  totalCurrentValue: number;
+  totalEquity: number;
+  totalLiability: number;
+  totalMonthlyCashFlow: number;
+  averageLTV: number;
+  expiringCount: number;
+}
+
 // =========================================
 // UI용 라벨 매핑
 // =========================================

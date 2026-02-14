@@ -9,6 +9,7 @@ import type {
   ROIInfo,
   LTVInfo,
   PropertyInvestmentSummary,
+  PortfolioSummary,
   ContractType,
 } from "@/types/property";
 
@@ -104,7 +105,9 @@ export function calculateROI(property: Property): ROIInfo {
   const annualNetIncome = cashFlow.annualCashFlow;
 
   // ROI = (연 순수익 / 실투자금) × 100
+  // 실투자금이 0 이하인 경우 (과도한 레버리지): ROI 계산 불가
   const roi = actualInvestment > 0 ? (annualNetIncome / actualInvestment) * 100 : 0;
+
 
   return { actualInvestment, annualNetIncome, roi };
 }
@@ -166,16 +169,6 @@ export function calculateInvestmentSummary(property: Property): PropertyInvestme
 // 전체 부동산 포트폴리오 통계
 // =========================================
 
-export interface PortfolioSummary {
-  totalProperties: number;       // 총 부동산 수
-  totalCurrentValue: number;     // 총 시가
-  totalEquity: number;           // 총 순자산
-  totalLiability: number;        // 총 부채
-  totalMonthlyCashFlow: number;  // 총 월 현금흐름
-  averageLTV: number;            // 평균 LTV
-  expiringCount: number;         // 만기 임박 수
-}
-
 export function calculatePortfolioSummary(properties: Property[]): PortfolioSummary {
   if (properties.length === 0) {
     return {
@@ -194,6 +187,7 @@ export function calculatePortfolioSummary(properties: Property[]): PortfolioSumm
   let totalLiability = 0;
   let totalMonthlyCashFlow = 0;
   let totalLTV = 0;
+  let loanCount = 0;
   let expiringCount = 0;
 
   for (const property of properties) {
@@ -205,7 +199,12 @@ export function calculatePortfolioSummary(properties: Property[]): PortfolioSumm
     totalEquity += equity.equity;
     totalLiability += equity.totalLiability;
     totalMonthlyCashFlow += cashFlow.monthlyCashFlow;
-    totalLTV += ltv.ltv;
+
+    // 대출이 있는 부동산만 LTV 평균에 포함
+    if (property.loanPrincipal > 0) {
+      totalLTV += ltv.ltv;
+      loanCount++;
+    }
 
     if (isExpiryWarning(property.contractEndDate)) {
       expiringCount++;
@@ -218,7 +217,7 @@ export function calculatePortfolioSummary(properties: Property[]): PortfolioSumm
     totalEquity,
     totalLiability,
     totalMonthlyCashFlow,
-    averageLTV: totalLTV / properties.length,
+    averageLTV: loanCount > 0 ? totalLTV / loanCount : 0,
     expiringCount,
   };
 }
