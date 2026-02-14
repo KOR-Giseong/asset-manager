@@ -174,22 +174,9 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
                 <Wallet className="h-5 w-5 text-blue-500" />
               </div>
-              <div className="min-w-0 flex-1">
+              <div>
                 <p className="text-xs text-muted-foreground">기준 연봉 (세전)</p>
-                <input
-                  type="text"
-                  value={annualSalary.toLocaleString()}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value.replace(/,/g, ""), 10);
-                    if (!isNaN(value)) {
-                      handleSalaryChange(value);
-                    } else if (e.target.value === "") {
-                      handleSalaryChange(0);
-                    }
-                  }}
-                  className="w-full max-w-[180px] border-none bg-transparent p-0 text-lg font-bold focus:outline-none focus:ring-0"
-                  placeholder="연봉 입력"
-                />
+                <p className="text-lg font-bold">{formatKRW(annualSalary)}</p>
               </div>
             </div>
             <button
