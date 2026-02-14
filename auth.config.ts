@@ -11,17 +11,24 @@ export const authConfig: NextAuthConfig = {
   pages: {
     signIn: "/login",
   },
+  // ensure a stable secret is provided for JWE encryption/decryption
+  secret: process.env.NEXTAUTH_SECRET,
+  session: { strategy: "jwt" },
   callbacks: {
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;
-      const isOnLogin = nextUrl.pathname.startsWith("/login");
-
-      if (isOnLogin) {
-        if (isLoggedIn) return Response.redirect(new URL("/", nextUrl));
-        return true;
+    authorized({ auth }) {
+      return !!auth?.user;
+    },
+    jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
       }
-
-      return isLoggedIn;
+      return token;
+    },
+    session({ session, token }) {
+      if (session.user && token.id) {
+        session.user.id = token.id as string;
+      }
+      return session;
     },
   },
 };
