@@ -9,6 +9,7 @@ import {
 import { AddAssetDialog } from "@/components/add-asset-dialog";
 import { AssetChart } from "@/components/asset-chart";
 import { AssetTable } from "@/components/asset-table";
+import { AssetTrendChart } from "@/components/asset-trend-chart";
 import { RefreshButton } from "@/components/refresh-button";
 import { UserNav } from "@/components/user-nav";
 import { PropertyDashboard } from "@/components/property";
@@ -177,6 +178,11 @@ export default async function Home() {
               </Card>
             );
           })}
+        </div>
+
+        {/* 자산 추이 선 그래프 */}
+        <div className="mb-6">
+          <AssetTrendChart />
         </div>
 
         {/* 자산 목록 */}

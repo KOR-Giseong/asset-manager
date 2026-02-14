@@ -16,7 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { addAsset } from "@/app/actions/asset-actions";
 import { toast } from "sonner";
-import { handleActionResult, toastMessages, formatKRWWithUnit } from "@/lib/toast-helpers";
+import { handleActionResult, toastMessages } from "@/lib/toast-helpers";
+import { formatKRWWithUnit } from "@/lib/format";
 
 export function AddAssetDialog() {
   const [open, setOpen] = useState(false);

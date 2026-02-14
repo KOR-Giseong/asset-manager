@@ -8,15 +8,16 @@ datasource db {
 }
 
 model User {
-  id            String     @id @default(cuid())
-  name          String?
-  email         String?    @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  assets        Asset[]
-  properties    Property[]
+  id             String          @id @default(cuid())
+  name           String?
+  email          String?         @unique
+  emailVerified  DateTime?
+  image          String?
+  accounts       Account[]
+  sessions       Session[]
+  assets         Asset[]
+  properties     Property[]
+  assetSnapshots AssetSnapshot[]
 }
 
 model Account {
@@ -134,4 +135,26 @@ enum ContractType {
   MONTHLY     // 월세 (임차인)
   RENTAL_JEONSE  // 전세 놓음 (임대인)
   RENTAL_MONTHLY // 월세 놓음 (임대인)
+}
+
+// =========================================
+// 자산 히스토리 스냅샷 (추이 분석용)
+// =========================================
+
+model AssetSnapshot {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  
+  // 스냅샷 데이터
+  totalAmount     Float  // 총 자산 (주식 + 부동산 + 예적금)
+  stockAmount     Float  @default(0) // 주식 자산
+  propertyAmount  Float  @default(0) // 부동산 자산
+  depositAmount   Float  @default(0) // 예적금 자산
+  
+  // 관계
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
 }

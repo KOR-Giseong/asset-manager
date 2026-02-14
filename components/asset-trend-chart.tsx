@@ -1,0 +1,425 @@
+"use client";
+
+// =========================================
+// 자산 추이 선 그래프 (Line Chart)
+// =========================================
+
+import { useEffect, useState, useTransition } from "react";
+import {
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+  Legend,
+} from "recharts";
+import { TrendingUp, TrendingDown, History, Camera, Loader2 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { getHistory, createManualSnapshot, getAssetChangeRate } from "@/app/actions/history-actions";
+import { formatKRW } from "@/lib/format";
+import { toast } from "sonner";
+import type { HistoryPeriod } from "@/services/historyService";
+
+// =========================================
+// 타입 정의
+// =========================================
+
+interface ChartDataPoint {
+  date: string;
+  displayDate: string;
+  total: number;
+  stock: number;
+  property: number;
+  deposit: number;
+}
+
+interface AssetChange {
+  absoluteChange: number;
+  percentChange: number;
+  startAmount: number;
+  endAmount: number;
+}
+
+// =========================================
+// 기간 옵션
+// =========================================
+
+const PERIOD_OPTIONS: { value: HistoryPeriod; label: string }[] = [
+  { value: "7d", label: "7일" },
+  { value: "30d", label: "30일" },
+  { value: "90d", label: "90일" },
+  { value: "1y", label: "1년" },
+  { value: "all", label: "전체" },
+];
+
+// =========================================
+// 커스텀 툴팁
+// =========================================
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    dataKey: string;
+    color: string;
+    name: string;
+  }>;
+  label?: string;
+}
+
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+  if (!active || !payload || payload.length === 0) return null;
+
+  return (
+    <div className="rounded-lg border border-border/50 bg-background/95 p-3 shadow-lg backdrop-blur-sm">
+      <p className="mb-2 text-sm font-medium text-foreground">{label}</p>
+      <div className="space-y-1">
+        {payload.map((entry, index) => (
+          <div key={index} className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <div
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: entry.color }}
+              />
+              <span className="text-xs text-muted-foreground">{entry.name}</span>
+            </div>
+            <span className="text-sm font-medium">{formatKRW(entry.value)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// =========================================
+// 메인 컴포넌트
+// =========================================
+
+export function AssetTrendChart() {
+  const [data, setData] = useState<ChartDataPoint[]>([]);
+  const [period, setPeriod] = useState<HistoryPeriod>("30d");
+  const [assetChange, setAssetChange] = useState<AssetChange | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+
+  // 데이터 로드
+  useEffect(() => {
+    async function loadData() {
+      setIsLoading(true);
+      try {
+        const [historyResult, changeResult] = await Promise.all([
+          getHistory(period),
+          getAssetChangeRate(period),
+        ]);
+
+        if (historyResult.success && historyResult.data) {
+          const chartData: ChartDataPoint[] = historyResult.data.map((item) => ({
+            date: item.date,
+            displayDate: formatDisplayDate(item.date),
+            total: item.totalAmount,
+            stock: item.stockAmount,
+            property: item.propertyAmount,
+            deposit: item.depositAmount,
+          }));
+          setData(chartData);
+        }
+
+        if (changeResult.success && changeResult.data) {
+          setAssetChange(changeResult.data);
+        } else {
+          setAssetChange(null);
+        }
+      } catch (error) {
+        console.error("Failed to load history:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadData();
+  }, [period]);
+
+  // 날짜 포맷팅
+  function formatDisplayDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${month}/${day}`;
+  }
+
+  // Y축 포맷팅 (억 단위)
+  function formatYAxis(value: number): string {
+    if (value >= 100_000_000) {
+      return `${(value / 100_000_000).toFixed(1)}억`;
+    }
+    if (value >= 10_000) {
+      return `${(value / 10_000).toFixed(0)}만`;
+    }
+    return value.toLocaleString();
+  }
+
+  // 수동 스냅샷 생성
+  function handleCreateSnapshot() {
+    startTransition(async () => {
+      toast.loading("스냅샷 기록 중...", { id: "create-snapshot" });
+      const result = await createManualSnapshot();
+
+      if (result.success) {
+        toast.success("오늘의 자산 스냅샷이 기록되었습니다!", { id: "create-snapshot" });
+        // 데이터 리로드
+        const historyResult = await getHistory(period);
+        if (historyResult.success && historyResult.data) {
+          const chartData: ChartDataPoint[] = historyResult.data.map((item) => ({
+            date: item.date,
+            displayDate: formatDisplayDate(item.date),
+            total: item.totalAmount,
+            stock: item.stockAmount,
+            property: item.propertyAmount,
+            deposit: item.depositAmount,
+          }));
+          setData(chartData);
+        }
+      } else {
+        toast.error(result.error || "스냅샷 생성에 실패했습니다.", { id: "create-snapshot" });
+      }
+    });
+  }
+
+  // 변화율 색상
+  const changeColor = assetChange
+    ? assetChange.percentChange >= 0
+      ? "text-emerald-500"
+      : "text-red-500"
+    : "text-muted-foreground";
+
+  return (
+    <Card className="border-border/60 shadow-sm">
+      <CardHeader className="pb-2">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
+              <History className="h-5 w-5 text-blue-500" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">자산 추이</CardTitle>
+              <CardDescription>
+                {period === "7d" && "최근 7일간 자산 변화"}
+                {period === "30d" && "최근 30일간 자산 변화"}
+                {period === "90d" && "최근 90일간 자산 변화"}
+                {period === "1y" && "최근 1년간 자산 변화"}
+                {period === "all" && "전체 기간 자산 변화"}
+              </CardDescription>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* 변화율 배지 */}
+            {assetChange && (
+              <Badge
+                variant={assetChange.percentChange >= 0 ? "default" : "destructive"}
+                className="gap-1"
+              >
+                {assetChange.percentChange >= 0 ? (
+                  <TrendingUp className="h-3 w-3" />
+                ) : (
+                  <TrendingDown className="h-3 w-3" />
+                )}
+                {assetChange.percentChange >= 0 ? "+" : ""}
+                {assetChange.percentChange.toFixed(2)}%
+              </Badge>
+            )}
+
+            {/* 스냅샷 버튼 */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCreateSnapshot}
+              disabled={isPending}
+              className="gap-2"
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Camera className="h-4 w-4" />
+              )}
+              스냅샷
+            </Button>
+          </div>
+        </div>
+
+        {/* 기간 선택 탭 */}
+        <div className="mt-4 flex gap-1">
+          {PERIOD_OPTIONS.map((option) => (
+            <Button
+              key={option.value}
+              variant={period === option.value ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setPeriod(option.value)}
+              className="h-7 px-3 text-xs"
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-4">
+        {isLoading ? (
+          <div className="flex h-[300px] items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : data.length === 0 ? (
+          <div className="flex h-[300px] flex-col items-center justify-center gap-4 text-center">
+            <History className="h-12 w-12 text-muted-foreground/50" />
+            <div>
+              <p className="text-sm text-muted-foreground">
+                아직 기록된 히스토리가 없습니다
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground/70">
+                &apos;스냅샷&apos; 버튼을 눌러 오늘의 자산을 기록하세요
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCreateSnapshot}
+              disabled={isPending}
+              className="gap-2"
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Camera className="h-4 w-4" />
+              )}
+              첫 스냅샷 기록하기
+            </Button>
+          </div>
+        ) : (
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={data}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorStock" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="colorProperty" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="hsl(var(--border))"
+                  opacity={0.3}
+                />
+                <XAxis
+                  dataKey="displayDate"
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={11}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={formatYAxis}
+                  width={60}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  verticalAlign="top"
+                  height={36}
+                  iconType="circle"
+                  iconSize={8}
+                  formatter={(value) => (
+                    <span className="text-xs text-muted-foreground">{value}</span>
+                  )}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="total"
+                  name="총자산"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  fill="url(#colorTotal)"
+                  dot={false}
+                  activeDot={{ r: 6, fill: "#3b82f6" }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="stock"
+                  name="주식"
+                  stroke="#ef4444"
+                  strokeWidth={1.5}
+                  dot={false}
+                  strokeDasharray="4 4"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="property"
+                  name="부동산"
+                  stroke="#10b981"
+                  strokeWidth={1.5}
+                  dot={false}
+                  strokeDasharray="4 4"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="deposit"
+                  name="예적금"
+                  stroke="#f59e0b"
+                  strokeWidth={1.5}
+                  dot={false}
+                  strokeDasharray="4 4"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* 변화 요약 */}
+        {assetChange && data.length > 0 && (
+          <div className="mt-4 grid grid-cols-2 gap-4 border-t border-border/50 pt-4 sm:grid-cols-4">
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">시작 자산</p>
+              <p className="text-sm font-semibold">{formatKRW(assetChange.startAmount)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">현재 자산</p>
+              <p className="text-sm font-semibold">{formatKRW(assetChange.endAmount)}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">변화 금액</p>
+              <p className={`text-sm font-semibold ${changeColor}`}>
+                {assetChange.absoluteChange >= 0 ? "+" : ""}
+                {formatKRW(assetChange.absoluteChange)}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">변화율</p>
+              <p className={`text-sm font-semibold ${changeColor}`}>
+                {assetChange.percentChange >= 0 ? "+" : ""}
+                {assetChange.percentChange.toFixed(2)}%
+              </p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

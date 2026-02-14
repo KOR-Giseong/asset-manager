@@ -112,7 +112,7 @@ export function DashboardHeaderSkeleton() {
 // 전체 대시보드 스켈레톤
 // =========================================
 
-export function DashboardSkeleton() {
+export function DashboardSkeleton({ children }: { children?: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
@@ -134,6 +134,7 @@ export function DashboardSkeleton() {
           <AssetCategorySkeleton />
         </div>
         <AssetTableSkeleton rows={5} />
+        {children}
       </div>
     </div>
   );
