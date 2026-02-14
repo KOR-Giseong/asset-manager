@@ -11,23 +11,24 @@ import { AssetChart } from "@/components/asset-chart";
 import { AssetTable } from "@/components/asset-table";
 import { RefreshButton } from "@/components/refresh-button";
 import { UserNav } from "@/components/user-nav";
-import { getAssets, type Asset } from "@/app/actions/asset-actions";
+import { getAssets } from "@/app/actions/asset-actions";
 import { auth } from "@/auth";
 import { LoginButton } from "@/components/login-button";
+import { formatKRW } from "@/lib/format";
+import { calculateTotalAssets, calculateCategoryTotals } from "@/lib/asset-utils";
+import type { AssetCategory, ChartDataItem } from "@/types/asset";
 
-function formatKRW(value: number): string {
-  return new Intl.NumberFormat("ko-KR", {
-    style: "currency",
-    currency: "KRW",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-const CHART_COLORS = {
+const CHART_COLORS: Record<AssetCategory, string> = {
   주식: "hsl(217, 91%, 60%)",
   부동산: "hsl(160, 84%, 39%)",
   예적금: "hsl(38, 92%, 50%)",
-} as const;
+};
+
+const CATEGORIES = [
+  { name: "주식" as const, icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+  { name: "부동산" as const, icon: Building2, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+  { name: "예적금" as const, icon: PiggyBank, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20" },
+] as const;
 
 export default async function Home() {
   const session = await auth();
@@ -61,27 +62,10 @@ export default async function Home() {
   }
 
   const assets = await getAssets();
+  const totalAssets = calculateTotalAssets(assets);
+  const categoryTotals = calculateCategoryTotals(assets);
 
-  const totalAssets = assets.reduce(
-    (sum: number, a: Asset) => sum + (a.currentPrice > 0 ? a.currentPrice : a.amount),
-    0
-  );
-
-  const categoryTotals = assets.reduce(
-    (acc: Record<string, number>, a: Asset) => {
-      acc[a.type] = (acc[a.type] || 0) + a.amount;
-      return acc;
-    },
-    {} as Record<string, number>
-  );
-
-  const categories = [
-    { name: "주식" as const, icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" },
-    { name: "부동산" as const, icon: Building2, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-    { name: "예적금" as const, icon: PiggyBank, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20" },
-  ];
-
-  const chartData = categories.map((cat) => ({
+  const chartData: ChartDataItem[] = CATEGORIES.map((cat) => ({
     name: cat.name,
     value: categoryTotals[cat.name] || 0,
     color: CHART_COLORS[cat.name],
@@ -141,7 +125,7 @@ export default async function Home() {
 
         {/* 카테고리별 카드 */}
         <div className="mb-6 grid gap-4 sm:grid-cols-3">
-          {categories.map((cat) => {
+          {CATEGORIES.map((cat) => {
             const amount = categoryTotals[cat.name] || 0;
             const ratio = totalAssets > 0 ? (amount / totalAssets) * 100 : 0;
             const Icon = cat.icon;

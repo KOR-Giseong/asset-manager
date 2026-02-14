@@ -1,17 +1,11 @@
 "use client";
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { formatKRW } from "@/lib/format";
+import type { ChartDataItem } from "@/types/asset";
 
 interface AssetChartProps {
-  data: { name: string; value: number; color: string }[];
-}
-
-function formatKRW(value: number): string {
-  return new Intl.NumberFormat("ko-KR", {
-    style: "currency",
-    currency: "KRW",
-    maximumFractionDigits: 0,
-  }).format(value);
+  data: ChartDataItem[];
 }
 
 function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { color: string } }> }) {
