@@ -135,65 +135,65 @@ export function IsaIrpCalculator({
       {/* 결과 카드 */}
       <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* IRP 세액공제 */}
-        <Card className="border-blue-500/20 bg-blue-500/5">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <PiggyBank className="h-4 w-4 text-blue-500" />
-              <span className="text-xs font-medium text-blue-500">IRP 세액공제</span>
+        <Card className="border-blue-500/20 bg-blue-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <PiggyBank className="h-3.5 w-3.5 text-blue-500 sm:h-4 sm:w-4" />
+              <span className="text-[10px] font-medium text-blue-500 sm:text-xs">IRP 세액공제</span>
             </div>
-            <p className="text-xl font-bold text-foreground sm:text-2xl">
+            <p className="text-base font-bold text-foreground truncate sm:text-2xl">
               {formatKRW(result.irpDeduction)}
             </p>
-            <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+            <p className="mt-1 text-[9px] text-muted-foreground sm:text-xs">
               공제율: {(result.irpDeductionRate * 100).toFixed(1)}%
             </p>
           </CardContent>
         </Card>
 
         {/* ISA 비과세 한도 */}
-        <Card className="border-emerald-500/20 bg-emerald-500/5">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Wallet className="h-4 w-4 text-emerald-500" />
-              <span className="text-xs font-medium text-emerald-500">ISA 비과세 한도</span>
+        <Card className="border-emerald-500/20 bg-emerald-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <Wallet className="h-3.5 w-3.5 text-emerald-500 sm:h-4 sm:w-4" />
+              <span className="text-[10px] font-medium text-emerald-500 sm:text-xs">ISA 비과세</span>
             </div>
-            <p className="text-xl font-bold text-foreground sm:text-2xl">
+            <p className="text-base font-bold text-foreground truncate sm:text-2xl">
               {formatKRW(result.isaNonTaxableLimit)}
             </p>
-            <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
-              {annualSalary <= 50_000_000 ? "서민형 (400만원)" : "일반형 (200만원)"}
+            <p className="mt-1 text-[9px] text-muted-foreground sm:text-xs">
+              {annualSalary <= 50_000_000 ? "서민형" : "일반형"}
             </p>
           </CardContent>
         </Card>
 
         {/* ISA 절세 금액 */}
-        <Card className="border-amber-500/20 bg-amber-500/5">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="h-4 w-4 text-amber-500" />
-              <span className="text-xs font-medium text-amber-500">ISA 절세 효과</span>
+        <Card className="border-amber-500/20 bg-amber-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <TrendingUp className="h-3.5 w-3.5 text-amber-500 sm:h-4 sm:w-4" />
+              <span className="text-[10px] font-medium text-amber-500 sm:text-xs">ISA 절세</span>
             </div>
-            <p className="text-xl font-bold text-foreground sm:text-2xl">
+            <p className="text-base font-bold text-foreground truncate sm:text-2xl">
               {formatKRW(result.isaTaxSaved)}
             </p>
-            <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
-              예상 수익률 5% 기준
+            <p className="mt-1 text-[9px] text-muted-foreground sm:text-xs">
+              수익률 5% 기준
             </p>
           </CardContent>
         </Card>
 
         {/* 총 절세 효과 */}
-        <Card className="border-violet-500/20 bg-violet-500/5">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <ShieldCheck className="h-4 w-4 text-violet-500" />
-              <span className="text-xs font-medium text-violet-500">총 절세 효과</span>
+        <Card className="border-violet-500/20 bg-violet-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center gap-2 mb-2 sm:mb-3">
+              <ShieldCheck className="h-3.5 w-3.5 text-violet-500 sm:h-4 sm:w-4" />
+              <span className="text-[10px] font-medium text-violet-500 sm:text-xs">총 절세</span>
             </div>
-            <p className="text-xl font-bold text-violet-500 sm:text-2xl">
+            <p className="text-base font-bold text-violet-500 truncate sm:text-2xl">
               {formatKRW(result.totalTaxSaved)}
             </p>
-            <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
-              IRP + ISA 합산
+            <p className="mt-1 text-[9px] text-muted-foreground sm:text-xs">
+              IRP + ISA
             </p>
           </CardContent>
         </Card>

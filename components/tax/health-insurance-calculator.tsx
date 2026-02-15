@@ -195,26 +195,26 @@ export function HealthInsuranceCalculator({
 
       {/* 결과 카드 */}
       <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-blue-500/20 bg-blue-500/5">
-          <CardContent className="p-4">
-            <p className="text-[10px] text-muted-foreground sm:text-xs">기본 건보료 (월)</p>
-            <p className="text-lg font-bold text-foreground sm:text-xl">
+        <Card className="border-blue-500/20 bg-blue-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-[9px] text-muted-foreground sm:text-xs">기본 건보료 (월)</p>
+            <p className="text-sm font-bold text-foreground truncate sm:text-xl">
               {formatKRW(result.salaryInsurance)}
             </p>
-            <p className="mt-1 text-[10px] text-muted-foreground">
-              본인 부담분 (50%)
+            <p className="mt-1 text-[9px] text-muted-foreground">
+              본인 50%
             </p>
           </CardContent>
         </Card>
 
-        <Card className={`${
+        <Card className={`overflow-hidden ${
           result.additionalInsurance > 0 
             ? "border-amber-500/20 bg-amber-500/5" 
             : "border-emerald-500/20 bg-emerald-500/5"
         }`}>
-          <CardContent className="p-4">
-            <p className="text-[10px] text-muted-foreground sm:text-xs">소득월액보험료 (월)</p>
-            <p className={`text-lg font-bold sm:text-xl ${
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-[9px] text-muted-foreground sm:text-xs">소득월액보험료</p>
+            <p className={`text-sm font-bold truncate sm:text-xl ${
               result.additionalInsurance > 0 ? "text-amber-500" : "text-foreground"
             }`}>
               {result.additionalInsurance > 0 
@@ -222,25 +222,25 @@ export function HealthInsuranceCalculator({
                 : "없음"
               }
             </p>
-            <p className="mt-1 text-[10px] text-muted-foreground">
-              초과 소득 × 7.09% × 50%
+            <p className="mt-1 text-[9px] text-muted-foreground">
+              초과소득×7.09%
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-violet-500/20 bg-violet-500/5">
-          <CardContent className="p-4">
-            <p className="text-[10px] text-muted-foreground sm:text-xs">총 월 건보료</p>
-            <p className="text-lg font-bold text-violet-500 sm:text-xl">
+        <Card className="border-violet-500/20 bg-violet-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-[9px] text-muted-foreground sm:text-xs">총 월 건보료</p>
+            <p className="text-sm font-bold text-violet-500 truncate sm:text-xl">
               {formatKRW(result.totalMonthlyInsurance)}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-red-500/20 bg-red-500/5">
-          <CardContent className="p-4">
-            <p className="text-[10px] text-muted-foreground sm:text-xs">연간 건보료</p>
-            <p className="text-lg font-bold text-red-500 sm:text-xl">
+        <Card className="border-red-500/20 bg-red-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-[9px] text-muted-foreground sm:text-xs">연간 건보료</p>
+            <p className="text-sm font-bold text-red-500 truncate sm:text-xl">
               {formatKRW(result.totalAnnualInsurance)}
             </p>
           </CardContent>
@@ -271,8 +271,8 @@ export function HealthInsuranceCalculator({
       </div>
 
       {/* 건보료율 안내 */}
-      <div className="overflow-x-auto rounded-lg border border-border/60">
-        <table className="w-full text-xs sm:text-sm">
+      <div className="overflow-x-auto rounded-lg border border-border/60 -mx-1 sm:mx-0">
+        <table className="w-full text-[10px] sm:text-sm min-w-[250px]">
           <thead className="bg-muted/50">
             <tr>
               <th className="px-3 py-2 text-left font-medium">항목</th>

@@ -152,39 +152,39 @@ export function ForeignStockTaxCalculator({
 
       {/* 결과 카드 */}
       <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-blue-500/20 bg-blue-500/5">
-          <CardContent className="p-4">
-            <p className="text-[10px] text-muted-foreground sm:text-xs">순수익</p>
-            <p className="text-lg font-bold text-foreground sm:text-xl">
+        <Card className="border-blue-500/20 bg-blue-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-[9px] text-muted-foreground sm:text-xs">순수익</p>
+            <p className="text-sm font-bold text-foreground truncate sm:text-xl">
               {formatKRW(result.netGain)}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-emerald-500/20 bg-emerald-500/5">
-          <CardContent className="p-4">
-            <p className="text-[10px] text-muted-foreground sm:text-xs">기본공제</p>
-            <p className="text-lg font-bold text-foreground sm:text-xl">
+        <Card className="border-emerald-500/20 bg-emerald-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-[9px] text-muted-foreground sm:text-xs">기본공제</p>
+            <p className="text-sm font-bold text-foreground truncate sm:text-xl">
               {formatKRW(result.basicDeduction)}
             </p>
-            <p className="mt-1 text-[10px] text-muted-foreground">연 250만원</p>
+            <p className="mt-1 text-[9px] text-muted-foreground">연 250만원</p>
           </CardContent>
         </Card>
 
-        <Card className="border-amber-500/20 bg-amber-500/5">
-          <CardContent className="p-4">
-            <p className="text-[10px] text-muted-foreground sm:text-xs">적용 세율</p>
-            <p className="text-lg font-bold text-foreground sm:text-xl">
+        <Card className="border-amber-500/20 bg-amber-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-[9px] text-muted-foreground sm:text-xs">적용 세율</p>
+            <p className="text-sm font-bold text-foreground truncate sm:text-xl">
               {(result.taxRate * 100).toFixed(0)}%
             </p>
-            <p className="mt-1 text-[10px] text-muted-foreground">양도세 20% + 지방세 2%</p>
+            <p className="mt-1 text-[9px] text-muted-foreground">20%+지방세 2%</p>
           </CardContent>
         </Card>
 
-        <Card className="border-red-500/20 bg-red-500/5">
-          <CardContent className="p-4">
-            <p className="text-[10px] text-muted-foreground sm:text-xs">납부 세금</p>
-            <p className="text-lg font-bold text-red-500 sm:text-xl">
+        <Card className="border-red-500/20 bg-red-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-[9px] text-muted-foreground sm:text-xs">납부 세금</p>
+            <p className="text-sm font-bold text-red-500 truncate sm:text-xl">
               {formatKRW(result.totalTax)}
             </p>
           </CardContent>

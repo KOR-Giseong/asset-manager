@@ -86,14 +86,14 @@ export function TaxPieChart({ data, totalAssets }: TaxPieChartProps) {
   const taxRatio = taxData ? (taxData.value / totalAssets) * 100 : 0;
 
   return (
-    <Card className="border-border/60">
+    <Card className="border-border/60 overflow-hidden">
       <CardHeader className="pb-2 sm:pb-4">
-        <CardTitle className="text-sm sm:text-base">자산 대비 세금 비중</CardTitle>
+        <CardTitle className="text-sm sm:text-base">자산 대비 세금</CardTitle>
         <CardDescription className="text-[10px] sm:text-xs">
-          전체 자산 중 세금이 차지하는 비율
+          전체 자산 중 세금 비율
         </CardDescription>
       </CardHeader>
-      <CardContent className="px-2 sm:px-6">
+      <CardContent className="px-2 sm:px-6 overflow-hidden">
         <div className="flex flex-col items-center">
           <div className="h-[200px] w-full sm:h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -120,29 +120,29 @@ export function TaxPieChart({ data, totalAssets }: TaxPieChartProps) {
           </div>
 
           {/* 범례 */}
-          <div className="mt-2 flex flex-wrap justify-center gap-4 sm:mt-4">
+          <div className="mt-2 flex flex-wrap justify-center gap-2 sm:mt-4 sm:gap-4">
             {data.map((entry) => (
-              <div key={entry.name} className="flex items-center gap-2">
+              <div key={entry.name} className="flex items-center gap-1 sm:gap-2">
                 <div
-                  className="h-3 w-3 rounded-sm"
+                  className="h-2.5 w-2.5 rounded-sm sm:h-3 sm:w-3"
                   style={{ backgroundColor: entry.color }}
                 />
-                <span className="text-xs text-muted-foreground">{entry.name}</span>
-                <span className="text-xs font-medium">{formatKRW(entry.value)}</span>
+                <span className="text-[9px] text-muted-foreground sm:text-xs">{entry.name}</span>
+                <span className="text-[9px] font-medium sm:text-xs">{formatKRW(entry.value)}</span>
               </div>
             ))}
           </div>
 
           {/* 요약 정보 */}
-          <div className="mt-4 w-full rounded-lg border border-border/50 bg-muted/30 p-3 sm:p-4">
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div>
-                <p className="text-[10px] text-muted-foreground sm:text-xs">총 자산</p>
-                <p className="text-sm font-bold sm:text-base">{formatKRW(totalAssets)}</p>
+          <div className="mt-4 w-full rounded-lg border border-border/50 bg-muted/30 p-2 sm:p-4">
+            <div className="grid grid-cols-2 gap-2 text-center sm:gap-4">
+              <div className="min-w-0">
+                <p className="text-[9px] text-muted-foreground sm:text-xs">총 자산</p>
+                <p className="text-xs font-bold truncate sm:text-base">{formatKRW(totalAssets)}</p>
               </div>
-              <div>
-                <p className="text-[10px] text-muted-foreground sm:text-xs">세금 비율</p>
-                <p className={`text-sm font-bold sm:text-base ${
+              <div className="min-w-0">
+                <p className="text-[9px] text-muted-foreground sm:text-xs">세금 비율</p>
+                <p className={`text-xs font-bold truncate sm:text-base ${
                   taxRatio > 10 ? "text-red-500" : taxRatio > 5 ? "text-amber-500" : "text-emerald-500"
                 }`}>
                   {taxRatio.toFixed(2)}%

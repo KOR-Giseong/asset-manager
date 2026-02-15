@@ -57,25 +57,25 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
 
 export function TaxComparisonChart({ data }: TaxComparisonChartProps) {
   return (
-    <Card className="border-border/60">
+    <Card className="border-border/60 overflow-hidden">
       <CardHeader className="pb-2 sm:pb-4">
-        <CardTitle className="text-sm sm:text-base">세금 비교 (절세 전/후)</CardTitle>
+        <CardTitle className="text-sm sm:text-base">세금 비교</CardTitle>
         <CardDescription className="text-[10px] sm:text-xs">
-          절세 전략 적용 전후 세금 비교
+          절세 전략 적용 전후 비교
         </CardDescription>
       </CardHeader>
-      <CardContent className="px-2 sm:px-6">
-        <div className="h-[250px] sm:h-[300px]">
+      <CardContent className="px-1 sm:px-6 overflow-hidden">
+        <div className="h-[220px] sm:h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
-              margin={{ top: 20, right: 10, left: 0, bottom: 5 }}
-              barCategoryGap="20%"
+              margin={{ top: 10, right: 5, left: -10, bottom: 5 }}
+              barCategoryGap="15%"
             >
               <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
               <XAxis
                 dataKey="category"
-                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={{ stroke: "hsl(var(--border))" }}
                 tickLine={{ stroke: "hsl(var(--border))" }}
               />
@@ -86,16 +86,16 @@ export function TaxComparisonChart({ data }: TaxComparisonChartProps) {
                   }
                   return value.toString();
                 }}
-                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={{ stroke: "hsl(var(--border))" }}
                 tickLine={{ stroke: "hsl(var(--border))" }}
-                width={45}
+                width={35}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend
-                wrapperStyle={{ fontSize: "12px" }}
+                wrapperStyle={{ fontSize: "10px" }}
                 formatter={(value) => (
-                  <span className="text-xs text-muted-foreground">{value}</span>
+                  <span className="text-[10px] text-muted-foreground sm:text-xs">{value}</span>
                 )}
               />
               <Bar
@@ -103,14 +103,14 @@ export function TaxComparisonChart({ data }: TaxComparisonChartProps) {
                 name="절세 전"
                 fill="#ef4444"
                 radius={[4, 4, 0, 0]}
-                maxBarSize={50}
+                maxBarSize={40}
               />
               <Bar
                 dataKey="after"
                 name="절세 후"
                 fill="#22c55e"
                 radius={[4, 4, 0, 0]}
-                maxBarSize={50}
+                maxBarSize={40}
               />
             </BarChart>
           </ResponsiveContainer>

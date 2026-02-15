@@ -177,46 +177,46 @@ export function PropertyTaxCalculator({
 
           {/* 결과 */}
           <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card className="border-blue-500/20 bg-blue-500/5">
-              <CardContent className="p-4">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">취득세</p>
-                <p className="text-lg font-bold text-foreground sm:text-xl">
+            <Card className="border-blue-500/20 bg-blue-500/5 overflow-hidden">
+              <CardContent className="p-3 sm:p-4">
+                <p className="text-[9px] text-muted-foreground sm:text-xs">취득세</p>
+                <p className="text-sm font-bold text-foreground truncate sm:text-xl">
                   {formatKRW(acquisitionResult.acquisitionTax)}
                 </p>
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  세율: {(acquisitionResult.acquisitionTaxRate * 100).toFixed(1)}%
+                <p className="mt-1 text-[9px] text-muted-foreground">
+                  {(acquisitionResult.acquisitionTaxRate * 100).toFixed(1)}%
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-emerald-500/20 bg-emerald-500/5">
-              <CardContent className="p-4">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">지방교육세</p>
-                <p className="text-lg font-bold text-foreground sm:text-xl">
+            <Card className="border-emerald-500/20 bg-emerald-500/5 overflow-hidden">
+              <CardContent className="p-3 sm:p-4">
+                <p className="text-[9px] text-muted-foreground sm:text-xs">지방교육세</p>
+                <p className="text-sm font-bold text-foreground truncate sm:text-xl">
                   {formatKRW(acquisitionResult.localEducationTax)}
                 </p>
-                <p className="mt-1 text-[10px] text-muted-foreground">
+                <p className="mt-1 text-[9px] text-muted-foreground">
                   취득세의 10%
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-amber-500/20 bg-amber-500/5">
-              <CardContent className="p-4">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">농어촌특별세</p>
-                <p className="text-lg font-bold text-foreground sm:text-xl">
+            <Card className="border-amber-500/20 bg-amber-500/5 overflow-hidden">
+              <CardContent className="p-3 sm:p-4">
+                <p className="text-[9px] text-muted-foreground sm:text-xs">농어촌특별세</p>
+                <p className="text-sm font-bold text-foreground truncate sm:text-xl">
                   {formatKRW(acquisitionResult.specialTax)}
                 </p>
-                <p className="mt-1 text-[10px] text-muted-foreground">
+                <p className="mt-1 text-[9px] text-muted-foreground">
                   {area > 85 ? "85㎡ 초과" : "해당 없음"}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-red-500/20 bg-red-500/5">
-              <CardContent className="p-4">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">총 취득세</p>
-                <p className="text-lg font-bold text-red-500 sm:text-xl">
+            <Card className="border-red-500/20 bg-red-500/5 overflow-hidden">
+              <CardContent className="p-3 sm:p-4">
+                <p className="text-[9px] text-muted-foreground sm:text-xs">총 취득세</p>
+                <p className="text-sm font-bold text-red-500 truncate sm:text-xl">
                   {formatKRW(acquisitionResult.totalTax)}
                 </p>
               </CardContent>
@@ -343,40 +343,40 @@ export function PropertyTaxCalculator({
 
           {/* 결과 */}
           <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card className="border-blue-500/20 bg-blue-500/5">
-              <CardContent className="p-4">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">양도차익</p>
-                <p className="text-lg font-bold text-foreground sm:text-xl">
+            <Card className="border-blue-500/20 bg-blue-500/5 overflow-hidden">
+              <CardContent className="p-3 sm:p-4">
+                <p className="text-[9px] text-muted-foreground sm:text-xs">양도차익</p>
+                <p className="text-sm font-bold text-foreground truncate sm:text-xl">
                   {formatKRW(capitalGainsResult.gain)}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-emerald-500/20 bg-emerald-500/5">
-              <CardContent className="p-4">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">장기보유특별공제</p>
-                <p className="text-lg font-bold text-foreground sm:text-xl">
+            <Card className="border-emerald-500/20 bg-emerald-500/5 overflow-hidden">
+              <CardContent className="p-3 sm:p-4">
+                <p className="text-[9px] text-muted-foreground sm:text-xs">장기보유공제</p>
+                <p className="text-sm font-bold text-foreground truncate sm:text-xl">
                   {formatKRW(capitalGainsResult.longTermDeduction)}
                 </p>
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  공제율: {(capitalGainsResult.longTermDeductionRate * 100).toFixed(0)}%
+                <p className="mt-1 text-[9px] text-muted-foreground">
+                  {(capitalGainsResult.longTermDeductionRate * 100).toFixed(0)}%
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-amber-500/20 bg-amber-500/5">
-              <CardContent className="p-4">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">과세표준</p>
-                <p className="text-lg font-bold text-foreground sm:text-xl">
+            <Card className="border-amber-500/20 bg-amber-500/5 overflow-hidden">
+              <CardContent className="p-3 sm:p-4">
+                <p className="text-[9px] text-muted-foreground sm:text-xs">과세표준</p>
+                <p className="text-sm font-bold text-foreground truncate sm:text-xl">
                   {formatKRW(capitalGainsResult.taxableIncome)}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-red-500/20 bg-red-500/5">
-              <CardContent className="p-4">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">총 양도세</p>
-                <p className="text-lg font-bold text-red-500 sm:text-xl">
+            <Card className="border-red-500/20 bg-red-500/5 overflow-hidden">
+              <CardContent className="p-3 sm:p-4">
+                <p className="text-[9px] text-muted-foreground sm:text-xs">총 양도세</p>
+                <p className="text-sm font-bold text-red-500 truncate sm:text-xl">
                   {formatKRW(capitalGainsResult.totalTax)}
                 </p>
               </CardContent>
@@ -384,8 +384,8 @@ export function PropertyTaxCalculator({
           </div>
 
           {/* 장기보유특별공제율 안내 */}
-          <div className="overflow-x-auto rounded-lg border border-border/60">
-            <table className="w-full text-xs sm:text-sm">
+          <div className="overflow-x-auto rounded-lg border border-border/60 -mx-1 sm:mx-0">
+            <table className="w-full text-[10px] sm:text-sm min-w-[200px]">
               <thead className="bg-muted/50">
                 <tr>
                   <th className="px-3 py-2 text-left font-medium">보유기간</th>

@@ -197,37 +197,37 @@ export function IncomeTaxCalculator({
 
       {/* 결과 카드 */}
       <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-blue-500/20 bg-blue-500/5">
-          <CardContent className="p-4">
-            <p className="text-[10px] text-muted-foreground sm:text-xs">산출세액</p>
-            <p className="text-lg font-bold text-foreground sm:text-xl">
+        <Card className="border-blue-500/20 bg-blue-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-[9px] text-muted-foreground sm:text-xs">산출세액</p>
+            <p className="text-sm font-bold text-foreground truncate sm:text-xl">
               {formatKRW(result.calculatedTax)}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-emerald-500/20 bg-emerald-500/5">
-          <CardContent className="p-4">
-            <p className="text-[10px] text-muted-foreground sm:text-xs">지방소득세</p>
-            <p className="text-lg font-bold text-foreground sm:text-xl">
+        <Card className="border-emerald-500/20 bg-emerald-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-[9px] text-muted-foreground sm:text-xs">지방소득세</p>
+            <p className="text-sm font-bold text-foreground truncate sm:text-xl">
               {formatKRW(result.localTax)}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-red-500/20 bg-red-500/5">
-          <CardContent className="p-4">
-            <p className="text-[10px] text-muted-foreground sm:text-xs">총 납부세액</p>
-            <p className="text-lg font-bold text-red-500 sm:text-xl">
+        <Card className="border-red-500/20 bg-red-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-[9px] text-muted-foreground sm:text-xs">총 납부세액</p>
+            <p className="text-sm font-bold text-red-500 truncate sm:text-xl">
               {formatKRW(result.totalTax)}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-violet-500/20 bg-violet-500/5">
-          <CardContent className="p-4">
-            <p className="text-[10px] text-muted-foreground sm:text-xs">실효세율</p>
-            <p className="text-lg font-bold text-violet-500 sm:text-xl">
+        <Card className="border-violet-500/20 bg-violet-500/5 overflow-hidden">
+          <CardContent className="p-3 sm:p-4">
+            <p className="text-[9px] text-muted-foreground sm:text-xs">실효세율</p>
+            <p className="text-sm font-bold text-violet-500 truncate sm:text-xl">
               {result.effectiveRate.toFixed(2)}%
             </p>
           </CardContent>
@@ -235,40 +235,40 @@ export function IncomeTaxCalculator({
       </div>
 
       {/* 세율 구간 안내 */}
-      <div className="overflow-x-auto rounded-lg border border-border/60">
-        <table className="w-full text-xs sm:text-sm">
+      <div className="overflow-x-auto rounded-lg border border-border/60 -mx-1 sm:mx-0">
+        <table className="w-full text-[10px] sm:text-sm min-w-[280px]">
           <thead className="bg-muted/50">
             <tr>
-              <th className="px-3 py-2 text-left font-medium">과세표준</th>
-              <th className="px-3 py-2 text-center font-medium">세율</th>
-              <th className="px-3 py-2 text-right font-medium">누진공제</th>
+              <th className="px-2 py-1.5 text-left font-medium sm:px-3 sm:py-2">과세표준</th>
+              <th className="px-2 py-1.5 text-center font-medium sm:px-3 sm:py-2">세율</th>
+              <th className="px-2 py-1.5 text-right font-medium sm:px-3 sm:py-2">누진공제</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/50">
             <tr className={result.taxableIncome <= 14_000_000 ? "bg-primary/5" : ""}>
-              <td className="px-3 py-2">1,400만원 이하</td>
-              <td className="px-3 py-2 text-center">6%</td>
-              <td className="px-3 py-2 text-right">-</td>
+              <td className="px-2 py-1.5 sm:px-3 sm:py-2">1,400만원 이하</td>
+              <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">6%</td>
+              <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">-</td>
             </tr>
             <tr className={result.taxableIncome > 14_000_000 && result.taxableIncome <= 50_000_000 ? "bg-primary/5" : ""}>
-              <td className="px-3 py-2">1,400만원 ~ 5,000만원</td>
-              <td className="px-3 py-2 text-center">15%</td>
-              <td className="px-3 py-2 text-right">126만원</td>
+              <td className="px-2 py-1.5 sm:px-3 sm:py-2">~5,000만원</td>
+              <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">15%</td>
+              <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">126만</td>
             </tr>
             <tr className={result.taxableIncome > 50_000_000 && result.taxableIncome <= 88_000_000 ? "bg-primary/5" : ""}>
-              <td className="px-3 py-2">5,000만원 ~ 8,800만원</td>
-              <td className="px-3 py-2 text-center">24%</td>
-              <td className="px-3 py-2 text-right">576만원</td>
+              <td className="px-2 py-1.5 sm:px-3 sm:py-2">~8,800만원</td>
+              <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">24%</td>
+              <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">576만</td>
             </tr>
             <tr className={result.taxableIncome > 88_000_000 && result.taxableIncome <= 150_000_000 ? "bg-primary/5" : ""}>
-              <td className="px-3 py-2">8,800만원 ~ 1.5억원</td>
-              <td className="px-3 py-2 text-center">35%</td>
-              <td className="px-3 py-2 text-right">1,544만원</td>
+              <td className="px-2 py-1.5 sm:px-3 sm:py-2">~1.5억</td>
+              <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">35%</td>
+              <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">1,544만</td>
             </tr>
             <tr className={result.taxableIncome > 150_000_000 ? "bg-primary/5" : ""}>
-              <td className="px-3 py-2">1.5억원 초과</td>
-              <td className="px-3 py-2 text-center">38~45%</td>
-              <td className="px-3 py-2 text-right">1,994만원~</td>
+              <td className="px-2 py-1.5 sm:px-3 sm:py-2">1.5억 초과</td>
+              <td className="px-2 py-1.5 text-center sm:px-3 sm:py-2">38~45%</td>
+              <td className="px-2 py-1.5 text-right sm:px-3 sm:py-2">1,994만~</td>
             </tr>
           </tbody>
         </table>

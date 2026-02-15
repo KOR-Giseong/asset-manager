@@ -154,25 +154,25 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden">
       {/* 연봉 저장 영역 */}
-      <Card className="border-border/60">
+      <Card className="border-border/60 overflow-hidden">
         <CardContent className="p-3 sm:p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
-                <Wallet className="h-5 w-5 text-blue-500" />
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 sm:h-10 sm:w-10">
+                <Wallet className="h-4 w-4 text-blue-500 sm:h-5 sm:w-5" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">기준 연봉 (세전)</p>
-                <p className="text-lg font-bold">{formatKRW(annualSalary)}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] text-muted-foreground sm:text-xs">기준 연봉</p>
+                <p className="text-sm font-bold truncate sm:text-lg">{formatKRW(annualSalary)}</p>
               </div>
             </div>
             <button
               onClick={handleSaveSalary}
               disabled={isPending || (isSaved && !hasChanges)}
               className={`
-                flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all
+                flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-all sm:gap-1.5 sm:px-3 sm:py-2 sm:text-sm
                 ${
                   isSaved && !hasChanges
                     ? "bg-emerald-500/10 text-emerald-500"
@@ -206,15 +206,15 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
 
       {/* 요약 카드 */}
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card className="border-border/60">
-          <CardContent className="p-3 sm:p-4">
+        <Card className="border-border/60 overflow-hidden">
+          <CardContent className="p-2 sm:p-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/10 sm:h-10 sm:w-10">
-                <Calculator className="h-4 w-4 text-red-500 sm:h-5 sm:w-5" />
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-500/10 sm:h-10 sm:w-10">
+                <Calculator className="h-3.5 w-3.5 text-red-500 sm:h-5 sm:w-5" />
               </div>
-              <div className="min-w-0">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">절세 전 세금</p>
-                <p className="truncate text-sm font-bold text-red-500 sm:text-lg">
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] text-muted-foreground sm:text-xs">절세 전</p>
+                <p className="truncate text-xs font-bold text-red-500 sm:text-lg">
                   {formatKRW(taxReport.beforeOptimization.totalTax)}
                 </p>
               </div>
@@ -222,15 +222,15 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60">
-          <CardContent className="p-3 sm:p-4">
+        <Card className="border-border/60 overflow-hidden">
+          <CardContent className="p-2 sm:p-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 sm:h-10 sm:w-10">
-                <ShieldCheck className="h-4 w-4 text-emerald-500 sm:h-5 sm:w-5" />
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 sm:h-10 sm:w-10">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 sm:h-5 sm:w-5" />
               </div>
-              <div className="min-w-0">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">절세 후 세금</p>
-                <p className="truncate text-sm font-bold text-emerald-500 sm:text-lg">
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] text-muted-foreground sm:text-xs">절세 후</p>
+                <p className="truncate text-xs font-bold text-emerald-500 sm:text-lg">
                   {formatKRW(taxReport.afterOptimization.totalTax)}
                 </p>
               </div>
@@ -238,15 +238,15 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60">
-          <CardContent className="p-3 sm:p-4">
+        <Card className="border-border/60 overflow-hidden">
+          <CardContent className="p-2 sm:p-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 sm:h-10 sm:w-10">
-                <Wallet className="h-4 w-4 text-violet-500 sm:h-5 sm:w-5" />
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 sm:h-10 sm:w-10">
+                <Wallet className="h-3.5 w-3.5 text-violet-500 sm:h-5 sm:w-5" />
               </div>
-              <div className="min-w-0">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">절세 효과</p>
-                <p className="truncate text-sm font-bold text-violet-500 sm:text-lg">
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] text-muted-foreground sm:text-xs">절세 효과</p>
+                <p className="truncate text-xs font-bold text-violet-500 sm:text-lg">
                   {formatKRW(taxReport.totalSaving)}
                 </p>
               </div>
@@ -254,15 +254,15 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60">
-          <CardContent className="p-3 sm:p-4">
+        <Card className="border-border/60 overflow-hidden">
+          <CardContent className="p-2 sm:p-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 sm:h-10 sm:w-10">
-                <TrendingUp className="h-4 w-4 text-blue-500 sm:h-5 sm:w-5" />
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 sm:h-10 sm:w-10">
+                <TrendingUp className="h-3.5 w-3.5 text-blue-500 sm:h-5 sm:w-5" />
               </div>
-              <div className="min-w-0">
-                <p className="text-[10px] text-muted-foreground sm:text-xs">실효세율</p>
-                <p className="truncate text-sm font-bold text-blue-500 sm:text-lg">
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] text-muted-foreground sm:text-xs">실효세율</p>
+                <p className="truncate text-xs font-bold text-blue-500 sm:text-lg">
                   {taxReport.incomeTax.effectiveRate.toFixed(1)}%
                 </p>
               </div>
@@ -272,22 +272,22 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
       </div>
 
       {/* 차트 영역 */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 overflow-hidden">
         <TaxComparisonChart data={comparisonData} />
         <TaxPieChart data={pieData} totalAssets={initialData.totalAssets} />
       </div>
 
       {/* 탭 네비게이션 */}
-      <Card className="border-border/60">
+      <Card className="border-border/60 overflow-hidden">
         <CardHeader className="pb-3 sm:pb-4">
           <CardTitle className="text-base sm:text-lg">세금 계산기</CardTitle>
           <CardDescription className="text-xs sm:text-sm">
             각 항목별 세금을 계산하고 절세 전략을 확인하세요
           </CardDescription>
         </CardHeader>
-        <CardContent className="px-3 sm:px-6">
+        <CardContent className="px-2 sm:px-6 overflow-x-hidden">
           {/* 탭 버튼 */}
-          <div className="mb-4 flex gap-1 overflow-x-auto rounded-lg bg-muted/50 p-1 sm:mb-6 sm:gap-2">
+          <div className="mb-4 flex gap-0.5 overflow-x-auto rounded-lg bg-muted/50 p-1 sm:mb-6 sm:gap-2 scrollbar-none">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -296,7 +296,7 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`
-                    flex min-w-0 flex-1 items-center justify-center gap-1 rounded-md px-2 py-2 text-xs font-medium transition-all
+                    flex min-w-0 flex-1 items-center justify-center gap-0.5 rounded-md px-1 py-1.5 text-[10px] font-medium transition-all
                     sm:gap-2 sm:px-3 sm:py-2.5 sm:text-sm
                     ${
                       isActive
@@ -305,7 +305,7 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
                     }
                   `}
                 >
-                  <Icon className={`h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4 ${isActive ? tab.color : ""}`} />
+                  <Icon className={`h-3 w-3 shrink-0 sm:h-4 sm:w-4 ${isActive ? tab.color : ""}`} />
                   <span className="hidden truncate sm:inline">{tab.label}</span>
                   <span className="truncate sm:hidden">{tab.shortLabel}</span>
                 </button>
@@ -314,7 +314,7 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
           </div>
 
           {/* 탭 컨텐츠 */}
-          <div className="min-h-[400px]">{renderTabContent()}</div>
+          <div className="min-h-[400px] overflow-x-hidden">{renderTabContent()}</div>
         </CardContent>
       </Card>
     </div>
