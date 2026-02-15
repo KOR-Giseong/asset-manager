@@ -72,7 +72,7 @@ export default async function TaxPage() {
 
   return (
     <SidebarLayout>
-      <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-background to-muted/20">
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
         <PageHeader
           title="세금 & 절세 마스터 센터"
           subtitle="2026년 최신 세법 기준 · 맞춤형 절세 전략"
@@ -80,7 +80,7 @@ export default async function TaxPage() {
           iconGradient="from-violet-500 to-purple-600"
         />
 
-        <div className="container max-w-6xl px-4 py-6 overflow-x-hidden">
+        <div className="container max-w-6xl px-4 py-6">
           <TaxCenter initialData={initialData} />
         </div>
       </div>
