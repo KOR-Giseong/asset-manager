@@ -278,16 +278,20 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
       </div>
 
       {/* 탭 네비게이션 */}
-      <Card className="border-border/60 overflow-hidden">
-        <CardHeader className="pb-3 sm:pb-4">
-          <CardTitle className="text-base sm:text-lg">세금 계산기</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            각 항목별 세금을 계산하고 절세 전략을 확인하세요
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="px-2 sm:px-6 overflow-x-hidden">
-          {/* 탭 버튼 */}
-          <div className="mb-4 flex gap-0.5 overflow-x-auto rounded-lg bg-muted/50 p-1 sm:mb-6 sm:gap-2 scrollbar-none">
+      <div>
+        {/* 세금 계산기 헤더 */}
+        <Card className="border-border/60 border-b-0 rounded-b-none overflow-hidden">
+          <CardHeader className="pb-3 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg">세금 계산기</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              각 항목별 세금을 계산하고 절세 전략을 확인하세요
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        {/* 탭 버튼 (스크롤 시 상단 고정) */}
+        <div className="sticky top-0 z-30 bg-card border-x border-border/60 px-2 py-2 sm:px-6">
+          <div className="flex gap-0.5 overflow-x-auto rounded-lg bg-muted/50 p-1 sm:gap-2 scrollbar-none">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -312,11 +316,15 @@ export function TaxCenter({ initialData }: TaxCenterProps) {
               );
             })}
           </div>
+        </div>
 
-          {/* 탭 컨텐츠 */}
-          <div className="min-h-[400px] overflow-x-hidden">{renderTabContent()}</div>
-        </CardContent>
-      </Card>
+        {/* 탭 컨텐츠 */}
+        <Card className="border-border/60 border-t-0 rounded-t-none overflow-hidden">
+          <CardContent className="px-2 pt-4 pb-6 sm:px-6 overflow-x-hidden">
+            <div className="min-h-[400px] overflow-x-hidden">{renderTabContent()}</div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

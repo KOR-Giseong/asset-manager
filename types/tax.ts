@@ -16,7 +16,20 @@ export interface TaxCalculationResult {
 // 세금 설정 타입 (연도별 교체 가능)
 // =========================================
 
-/** 장기보유특별공제율 */
+/** 장기보유특별공제 설정 (1세대 1주택) */
+export interface LongTermDeductionConfig {
+  holdingRatePerYear: number;    // 보유기간 연 공제율 (4%)
+  holdingMinYears: number;       // 보유기간 최소 연수 (3년)
+  holdingMaxYears: number;       // 보유기간 최대 연수 (10년)
+  holdingMaxRate: number;        // 보유기간 최대 공제율 (40%)
+  residenceRatePerYear: number;  // 거주기간 연 공제율 (4%)
+  residenceMinYears: number;     // 거주기간 최소 연수 (2년)
+  residenceMaxYears: number;     // 거주기간 최대 연수 (10년)
+  residenceMaxRate: number;      // 거주기간 최대 공제율 (40%)
+  totalMaxRate: number;          // 합계 최대 공제율 (80%)
+}
+
+/** 장기보유특별공제율 (단순 테이블 - 비 1주택용) */
 export interface LongTermDeductionRate {
   years: number;
   rate: number;
@@ -46,8 +59,8 @@ export interface TaxLimits {
   localEducationTaxRate: number;            // 지방교육세율 (10%)
   specialTaxRate: number;                   // 농어촌특별세율 (10%)
   specialTaxAreaThreshold: number;          // 농어촌특별세 면적 기준 (85㎡)
-  lifeFirstHomeExemptPriceLimit: number;    // 생애최초 취득세 면제 가격 한도 (6억원)
-  lifeFirstHomeExemptAreaLimit: number;     // 생애최초 취득세 면제 면적 한도 (85㎡)
+  lifeFirstHomePriceLimit: number;          // 생애최초 취득세 감면 가격 한도 (12억원)
+  lifeFirstHomeReductionLimit: number;      // 생애최초 취득세 감면 한도 (200만원)
 }
 
 /** 연도별 세금 설정 (세율, 구간, 한도 통합) */
@@ -55,7 +68,8 @@ export interface TaxConfig {
   year: number;
   incomeTaxBrackets: TaxBracket[];
   capitalGainsTaxBrackets: TaxBracket[];
-  longTermDeductionRates: LongTermDeductionRate[];
+  longTermDeductionRates: LongTermDeductionRate[];       // 비 1주택용 (레거시)
+  longTermDeductionConfig: LongTermDeductionConfig;      // 1세대 1주택용
   healthInsuranceRate: number;
   longTermCareRate: number;
   incomeMonthlyInsuranceRate: number;
@@ -161,41 +175,85 @@ export interface TaxBracket {
 // 부동산 세금 관련
 // =========================================
 
+/** 주택 수 (취득 후 기준) */
+export type HousingCount = 1 | 2 | 3;
+
+/** 다주택자 취득세 설정 */
+export interface MultiHomeAcquisitionTaxConfig {
+  // 조정대상지역
+  regulated: {
+    twoHome: number;      // 2주택 8%
+    threeHome: number;    // 3주택 이상 12%
+  };
+  // 비조정대상지역
+  nonRegulated: {
+    twoHome: number;      // 2주택 1~3% (1주택과 동일)
+    threeHome: number;    // 3주택 8%
+    fourPlusHome: number; // 4주택 이상 12%
+  };
+}
+
+/** 다주택자 양도세 중과 설정 */
+export interface MultiHomeCapitalGainsConfig {
+  // 조정대상지역 중과세율 (기본세율에 추가)
+  regulated: {
+    twoHomeSurtax: number;   // 2주택 +20%p
+    threeHomeSurtax: number; // 3주택 +30%p
+  };
+  // 비조정대상지역: 중과 없음 (기본세율)
+  // 장기보유특별공제 제한
+  longTermDeduction: {
+    regulatedMultiHome: boolean;       // 조정지역 다주택: 배제
+    nonRegulatedMultiHomeMaxRate: number; // 비조정지역 다주택: 일반 30%
+  };
+}
+
 export interface PropertyAcquisitionTaxInput {
-  purchasePrice: number; // 매수가
-  isFirstHome: boolean; // 1주택자 여부
-  isLifeFirstHome: boolean; // 생애최초 주택 여부
-  area: number; // 전용면적 (m²)
+  purchasePrice: number;     // 매수가
+  housingCount: HousingCount; // 취득 후 주택 수
+  isRegulatedArea: boolean;  // 조정대상지역 여부
+  isLifeFirstHome: boolean;  // 생애최초 주택 여부
+  area: number;              // 전용면적 (m²)
 }
 
 export interface PropertyAcquisitionTaxResult {
-  acquisitionTax: number; // 취득세
+  acquisitionTax: number;          // 취득세 (감면 후)
   acquisitionTaxRate: number;
-  localEducationTax: number; // 지방교육세
-  specialTax: number; // 농어촌특별세
+  localEducationTax: number;       // 지방교육세
+  specialTax: number;              // 농어촌특별세
   totalTax: number;
+  lifeFirstHomeReduction?: number; // 생애최초 감면액
+  isHeavyTax: boolean;             // 중과세 적용 여부
+  heavyTaxReason?: string;         // 중과세 사유
 }
 
 export interface PropertyCapitalGainsTaxInput {
-  purchasePrice: number; // 매수가
-  salePrice: number; // 매도가
-  holdingYears: number; // 보유기간 (년)
-  isOneHome: boolean; // 1주택자 여부
-  acquisitionCost: number; // 취득부대비용 (취득세, 중개수수료 등)
+  purchasePrice: number;      // 매수가
+  salePrice: number;          // 매도가
+  holdingYears: number;       // 보유기간 (년)
+  residenceYears: number;     // 거주기간 (년) - 1주택 장특공제용
+  housingCount: HousingCount; // 양도 시점 주택 수
+  isRegulatedArea: boolean;   // 조정대상지역 여부
+  acquisitionCost: number;    // 취득부대비용 (취득세, 중개수수료 등)
 }
 
 export interface PropertyCapitalGainsTaxResult {
-  gain: number; // 양도차익
-  taxableGain: number; // 과세대상 양도차익
-  longTermDeduction: number; // 장기보유특별공제
-  longTermDeductionRate: number;
-  basicDeduction: number; // 기본공제 (250만원)
-  taxableIncome: number; // 과세표준
-  calculatedTax: number; // 산출세액
-  localTax: number; // 지방소득세
+  gain: number;                    // 양도차익
+  taxableGain: number;             // 과세대상 양도차익
+  longTermDeduction: number;       // 장기보유특별공제
+  longTermDeductionRate: number;   // 적용 공제율
+  holdingDeductionRate: number;    // 보유기간 공제율
+  residenceDeductionRate: number;  // 거주기간 공제율
+  basicDeduction: number;          // 기본공제 (250만원)
+  taxableIncome: number;           // 과세표준
+  calculatedTax: number;           // 산출세액
+  localTax: number;                // 지방소득세
   totalTax: number;
-  isTaxExempt: boolean; // 비과세 여부
+  isTaxExempt: boolean;            // 비과세 여부
   exemptReason?: string;
+  surtaxRate: number;              // 중과세율 (추가된 %p)
+  isHeavyTax: boolean;             // 중과세 적용 여부
+  heavyTaxReason?: string;         // 중과세 사유
 }
 
 // =========================================

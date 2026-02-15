@@ -81,9 +81,9 @@ function renderCustomLabel({ cx = 0, cy = 0, midAngle = 0, innerRadius = 0, oute
 // =========================================
 
 export function TaxPieChart({ data, totalAssets }: TaxPieChartProps) {
-  // 세금 비율 계산
+  // 세금 비율 계산 (0으로 나누기 방지)
   const taxData = data.find((d) => d.name === "총 세금");
-  const taxRatio = taxData ? (taxData.value / totalAssets) * 100 : 0;
+  const taxRatio = taxData && totalAssets > 0 ? (taxData.value / totalAssets) * 100 : 0;
 
   return (
     <Card className="border-border/60 overflow-hidden">
