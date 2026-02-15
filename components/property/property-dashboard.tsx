@@ -44,29 +44,23 @@ export function PropertyDashboard({ properties, totalAssetValue = 0 }: PropertyD
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* 헤더 */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 pl-12 sm:gap-3 md:pl-0">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 sm:h-10 sm:w-10">
-            <Building2 className="h-4 w-4 text-emerald-500 sm:h-5 sm:w-5" />
+      {/* 액션 바 */}
+      {properties.length > 0 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            {summary.totalProperties}개 부동산 · 총 {formatKRW(summary.totalCurrentValue)}
           </div>
-          <div className="min-w-0">
-            <h2 className="text-base font-semibold text-foreground sm:text-lg">부동산 관리</h2>
-            <p className="truncate text-xs text-muted-foreground sm:text-sm">
-              {summary.totalProperties}개 부동산 · 총 {formatKRW(summary.totalCurrentValue)}
-            </p>
+          <div className="flex items-center gap-2">
+            {summary.expiringCount > 0 && (
+              <Badge variant="warning" className="gap-1 text-[10px] sm:text-xs">
+                <AlertTriangle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                만기 임박 {summary.expiringCount}건
+              </Badge>
+            )}
+            <AddPropertyDialog />
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {summary.expiringCount > 0 && (
-            <Badge variant="warning" className="gap-1 text-[10px] sm:text-xs">
-              <AlertTriangle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-              만기 임박 {summary.expiringCount}건
-            </Badge>
-          )}
-          <AddPropertyDialog />
-        </div>
-      </div>
+      )}
 
       {/* 포트폴리오 요약 카드 */}
       {properties.length > 0 && (

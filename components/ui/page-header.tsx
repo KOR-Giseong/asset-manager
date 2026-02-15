@@ -9,12 +9,12 @@ import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;  // string → React.ReactNode
   icon?: LucideIcon;
-  iconGradient?: string; // Tailwind gradient 클래스 (예: "from-violet-500 to-purple-600")
-  iconColor?: string; // 단색 아이콘 배경 (예: "bg-emerald-500/10")
-  iconTextColor?: string; // 아이콘 색상 (예: "text-emerald-500")
-  children?: React.ReactNode; // 우측 버튼/액션 영역
+  iconGradient?: string;
+  iconColor?: string;
+  iconTextColor?: string;
+  children?: React.ReactNode;
   className?: string;
 }
 
@@ -38,7 +38,7 @@ export function PageHeader({
         // 테두리 및 그림자
         "border-b border-border/40 shadow-sm",
         // 패딩: 모바일 왼쪽 여백(사이드바용) + 상하 패딩
-        "py-4 pl-12 pr-4 sm:py-5 md:pl-0 md:pr-0",
+        "py-4 pl-8 pr-4 sm:py-5 md:pl-0 md:pr-0",
         // 애니메이션
         "transition-all duration-200",
         className

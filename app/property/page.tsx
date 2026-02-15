@@ -7,8 +7,9 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, Building2 } from "lucide-react";
 import { SidebarLayout } from "@/components/layout";
+import { PageHeader } from "@/components/ui/page-header";
 import { PropertyDashboard } from "@/components/property/property-dashboard";
 import { getProperties } from "@/app/actions/property-actions";
 import type { Property } from "@/types/property";
@@ -63,8 +64,18 @@ export default function PropertyPage() {
 
   return (
     <SidebarLayout>
-      <div className="container py-6">
-        <PropertyDashboard properties={properties} />
+      <div className="min-h-screen">
+        <PageHeader
+          title="부동산 관리"
+          subtitle={<>보유 부동산을 통합 관리하고<br />현금흐름을 추적하세요.</>}
+          icon={Building2}
+          iconColor="bg-emerald-500/10"
+          iconTextColor="text-emerald-500"
+        />
+
+        <div className="container max-w-5xl px-4 py-6">
+          <PropertyDashboard properties={properties} />
+        </div>
       </div>
     </SidebarLayout>
   );
