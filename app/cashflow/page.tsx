@@ -75,7 +75,7 @@ export default function CashFlowPage() {
       <div className="min-h-screen">
         <PageHeader
           title="현금흐름 캘린더"
-          subtitle="월세, 배당금, 이자 등 예정된 현금 유입을 캘린더에서 확인하세요."
+          subtitle={<>월세, 배당금, 이자 등 예정된 현금 유입을<br />캘린더에서 확인하세요.</>}
           icon={Calendar}
           iconColor="bg-blue-500/10"
           iconTextColor="text-blue-500"
