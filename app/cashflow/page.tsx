@@ -7,8 +7,9 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, Calendar } from "lucide-react";
 import { SidebarLayout } from "@/components/layout";
+import { PageHeader } from "@/components/ui/page-header";
 import { CashFlowCalendar } from "@/components/cashflow";
 import { fetchMonthlyCashFlow } from "@/app/actions/cashflow-actions";
 import type { MonthlyCashFlowSummary } from "@/services/cashFlowService";
@@ -71,22 +72,25 @@ export default function CashFlowPage() {
 
   return (
     <SidebarLayout>
-      <div className="container max-w-5xl py-6">
-        <header className="mb-6 pl-12 md:pl-0">
-          <h1 className="text-xl font-bold sm:text-2xl">현금흐름 캘린더</h1>
-          <p className="text-xs text-muted-foreground sm:text-sm">
-            월세, 배당금, 이자 등 예정된 현금 유입을 캘린더에서 확인하세요.
-          </p>
-        </header>
+      <div className="min-h-screen">
+        <PageHeader
+          title="현금흐름 캘린더"
+          subtitle="월세, 배당금, 이자 등 예정된 현금 유입을 캘린더에서 확인하세요."
+          icon={Calendar}
+          iconColor="bg-blue-500/10"
+          iconTextColor="text-blue-500"
+        />
 
-        {summary && (
-          <CashFlowCalendar
-            summary={summary}
-            onMonthChange={handleMonthChange}
-            currentYear={currentYear}
-            currentMonth={currentMonth}
-          />
-        )}
+        <div className="container max-w-5xl px-4 py-6">
+          {summary && (
+            <CashFlowCalendar
+              summary={summary}
+              onMonthChange={handleMonthChange}
+              currentYear={currentYear}
+              currentMonth={currentMonth}
+            />
+          )}
+        </div>
       </div>
     </SidebarLayout>
   );

@@ -1,4 +1,4 @@
-import { TrendingUp, Building2, PiggyBank } from "lucide-react";
+import { TrendingUp, Building2, PiggyBank, LayoutDashboard } from "lucide-react";
 import { auth } from "@/auth";
 import {
   Card,
@@ -15,6 +15,7 @@ import { RefreshButton } from "@/components/refresh-button";
 import { UserNav } from "@/components/user-nav";
 import { PropertySummaryCard } from "@/components/property";
 import { SidebarLayout } from "@/components/layout";
+import { PageHeader } from "@/components/ui/page-header";
 import { LoginButton } from "@/components/login-button";
 import { getAssets } from "@/app/actions/asset-actions";
 import { getProperties } from "@/app/actions/property-actions";
@@ -102,24 +103,19 @@ export default async function Home() {
   return (
     <SidebarLayout>
       <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-          {/* Header */}
-          <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
-            <div className="pl-12 md:pl-0">
-              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                대시보드
-              </h1>
-              <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                나의 자산 현황을 한눈에 확인하세요
-              </p>
-            </div>
-            <div className="ml-auto flex items-center gap-2 sm:gap-4">
-              <RefreshButton />
-              <AddAssetDialog />
-              <UserNav user={session.user} />
-            </div>
-          </div>
+        <PageHeader
+          title="대시보드"
+          subtitle="나의 자산 현황을 한눈에 확인하세요"
+          icon={LayoutDashboard}
+          iconColor="bg-primary/10"
+          iconTextColor="text-primary"
+        >
+          <RefreshButton />
+          <AddAssetDialog />
+          <UserNav user={session.user} />
+        </PageHeader>
 
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
           {/* 총 자산 + 도넛 차트 */}
           <div className="mb-4 grid gap-4 sm:mb-6 sm:gap-6 lg:grid-cols-2">
             <Card className="border-border/60 shadow-sm">

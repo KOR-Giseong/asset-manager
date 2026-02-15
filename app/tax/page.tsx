@@ -1,7 +1,9 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { ShieldCheck } from "lucide-react";
 import { TaxCenter } from "@/components/tax/tax-center";
 import { SidebarLayout } from "@/components/layout";
+import { PageHeader } from "@/components/ui/page-header";
 import { prisma } from "@/lib/prisma";
 
 export default async function TaxPage() {
@@ -71,37 +73,14 @@ export default async function TaxPage() {
   return (
     <SidebarLayout>
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-        <div className="container max-w-6xl py-6">
-          {/* 헤더 */}
-          <div className="mb-6 pl-12 md:pl-0 sm:mb-8">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg sm:h-12 sm:w-12">
-                <svg
-                  className="h-5 w-5 text-white sm:h-6 sm:w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl md:text-3xl">
-                  세금 & 절세 마스터 센터
-                </h1>
-                <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-                  2026년 최신 세법 기준 · 맞춤형 절세 전략
-                </p>
-              </div>
-            </div>
-          </div>
+        <PageHeader
+          title="세금 & 절세 마스터 센터"
+          subtitle="2026년 최신 세법 기준 · 맞춤형 절세 전략"
+          icon={ShieldCheck}
+          iconGradient="from-violet-500 to-purple-600"
+        />
 
-          {/* 메인 컨텐츠 */}
+        <div className="container max-w-6xl px-4 py-6">
           <TaxCenter initialData={initialData} />
         </div>
       </div>
