@@ -22,8 +22,15 @@ import type {
   TotalTaxReportInput,
   TaxComparisonData,
   TaxPieData,
+  MultiHomeAcquisitionTaxConfig,
+  MultiHomeCapitalGainsConfig,
+  HousingCount,
 } from "@/types/tax";
-import { DEFAULT_TAX_CONFIG } from "@/lib/tax-config";
+import { 
+  DEFAULT_TAX_CONFIG, 
+  DEFAULT_MULTI_HOME_ACQUISITION_TAX,
+  DEFAULT_MULTI_HOME_CAPITAL_GAINS,
+} from "@/lib/tax-config";
 
 // =========================================
 // ISA/IRP 절세 계산
@@ -160,39 +167,98 @@ export function calculateIncomeTax(
 // 부동산 취득세 계산
 // =========================================
 
-export function calculatePropertyAcquisitionTax(
-  input: PropertyAcquisitionTaxInput,
-  config: TaxConfig = DEFAULT_TAX_CONFIG
-): PropertyAcquisitionTaxResult {
-  const { purchasePrice, isFirstHome, isLifeFirstHome, area } = input;
-  const { limits } = config;
+/**
+ * 1주택자 취득세율 계산 (가격별 세분화)
+ */
+function getOneHomeTaxRate(purchasePrice: number): number {
+  if (purchasePrice <= 600_000_000) return 0.01;    // 6억 이하 1%
+  if (purchasePrice <= 900_000_000) return 0.02;    // 6~9억 2%
+  return 0.03;                                       // 9억 초과 3%
+}
 
-  let acquisitionTaxRate: number;
-
-  if (
-    isLifeFirstHome &&
-    purchasePrice <= limits.lifeFirstHomeExemptPriceLimit &&
-    area <= limits.lifeFirstHomeExemptAreaLimit
-  ) {
-    acquisitionTaxRate = 0;
-  } else if (isFirstHome) {
-    if (purchasePrice <= 600_000_000) {
-      acquisitionTaxRate = 0.01;
-    } else if (purchasePrice <= 900_000_000) {
-      acquisitionTaxRate = 0.02;
-    } else {
-      acquisitionTaxRate = 0.03;
-    }
-  } else {
-    acquisitionTaxRate = 0.04;
+/**
+ * 다주택자 취득세율 계산
+ */
+function getMultiHomeTaxRate(
+  housingCount: HousingCount,
+  isRegulatedArea: boolean,
+  purchasePrice: number,
+  multiHomeConfig: MultiHomeAcquisitionTaxConfig = DEFAULT_MULTI_HOME_ACQUISITION_TAX
+): { rate: number; isHeavyTax: boolean; reason: string } {
+  // 1주택자
+  if (housingCount === 1) {
+    return {
+      rate: getOneHomeTaxRate(purchasePrice),
+      isHeavyTax: false,
+      reason: "",
+    };
   }
 
-  const acquisitionTax = purchasePrice * acquisitionTaxRate;
+  // 조정대상지역
+  if (isRegulatedArea) {
+    if (housingCount === 2) {
+      return {
+        rate: multiHomeConfig.regulated.twoHome,  // 8%
+        isHeavyTax: true,
+        reason: "조정대상지역 2주택",
+      };
+    }
+    // 3주택 이상
+    return {
+      rate: multiHomeConfig.regulated.threeHome,  // 12%
+      isHeavyTax: true,
+      reason: "조정대상지역 3주택 이상",
+    };
+  }
 
-  // 지방교육세
+  // 비조정대상지역
+  if (housingCount === 2) {
+    // 2주택은 1주택과 동일한 세율
+    return {
+      rate: getOneHomeTaxRate(purchasePrice),
+      isHeavyTax: false,
+      reason: "",
+    };
+  }
+  
+  // 3주택 이상
+  return {
+    rate: multiHomeConfig.nonRegulated.threeHome,  // 8%
+    isHeavyTax: true,
+    reason: "비조정지역 3주택 이상",
+  };
+}
+
+export function calculatePropertyAcquisitionTax(
+  input: PropertyAcquisitionTaxInput,
+  config: TaxConfig = DEFAULT_TAX_CONFIG,
+  multiHomeConfig: MultiHomeAcquisitionTaxConfig = DEFAULT_MULTI_HOME_ACQUISITION_TAX
+): PropertyAcquisitionTaxResult {
+  const { purchasePrice, housingCount, isRegulatedArea, isLifeFirstHome, area } = input;
+  const { limits } = config;
+
+  // 1. 취득세율 결정 (주택 수/조정지역 반영)
+  const { rate: acquisitionTaxRate, isHeavyTax, reason: heavyTaxReason } = 
+    getMultiHomeTaxRate(housingCount, isRegulatedArea, purchasePrice, multiHomeConfig);
+
+  // 2. 기본 취득세 계산
+  let acquisitionTax = purchasePrice * acquisitionTaxRate;
+
+  // 3. 생애최초 주택 감면 적용 (1주택, 12억 이하, 200만원 한도)
+  let lifeFirstHomeReduction = 0;
+  if (
+    housingCount === 1 && 
+    isLifeFirstHome && 
+    purchasePrice <= limits.lifeFirstHomePriceLimit
+  ) {
+    lifeFirstHomeReduction = Math.min(acquisitionTax, limits.lifeFirstHomeReductionLimit);
+    acquisitionTax = acquisitionTax - lifeFirstHomeReduction;
+  }
+
+  // 4. 지방교육세 (감면 후 취득세 기준)
   const localEducationTax = acquisitionTax * limits.localEducationTaxRate;
 
-  // 농어촌특별세
+  // 5. 농어촌특별세 (85㎡ 초과 시)
   const specialTax =
     area > limits.specialTaxAreaThreshold
       ? acquisitionTax * limits.specialTaxRate
@@ -206,6 +272,9 @@ export function calculatePropertyAcquisitionTax(
     localEducationTax,
     specialTax,
     totalTax,
+    lifeFirstHomeReduction,
+    isHeavyTax,
+    heavyTaxReason,
   };
 }
 
@@ -213,54 +282,171 @@ export function calculatePropertyAcquisitionTax(
 // 부동산 양도세 계산
 // =========================================
 
+/**
+ * 장기보유특별공제율 계산 (1세대 1주택)
+ * 실제 세법: 보유기간 연 4%(최대 40%) + 거주기간 연 4%(최대 40%) = 최대 80%
+ */
+function calculateLongTermDeductionRate(
+  holdingYears: number,
+  residenceYears: number,
+  config: TaxConfig
+): { total: number; holding: number; residence: number } {
+  const ltConfig = config.longTermDeductionConfig;
+
+  // 보유기간 공제율 계산
+  let holdingRate = 0;
+  if (holdingYears >= ltConfig.holdingMinYears) {
+    const applicableYears = Math.min(holdingYears, ltConfig.holdingMaxYears);
+    holdingRate = Math.min(
+      applicableYears * ltConfig.holdingRatePerYear,
+      ltConfig.holdingMaxRate
+    );
+  }
+
+  // 거주기간 공제율 계산
+  let residenceRate = 0;
+  if (residenceYears >= ltConfig.residenceMinYears) {
+    const applicableYears = Math.min(residenceYears, ltConfig.residenceMaxYears);
+    residenceRate = Math.min(
+      applicableYears * ltConfig.residenceRatePerYear,
+      ltConfig.residenceMaxRate
+    );
+  }
+
+  // 합계 (최대 80%)
+  const totalRate = Math.min(holdingRate + residenceRate, ltConfig.totalMaxRate);
+
+  return {
+    total: totalRate,
+    holding: holdingRate,
+    residence: residenceRate,
+  };
+}
+
+/**
+ * 다주택자 양도세 중과세율 및 장특공 제한 계산
+ */
+function getMultiHomeCapitalGainsInfo(
+  housingCount: HousingCount,
+  isRegulatedArea: boolean,
+  holdingYears: number,
+  residenceYears: number,
+  config: TaxConfig,
+  multiHomeConfig: MultiHomeCapitalGainsConfig = DEFAULT_MULTI_HOME_CAPITAL_GAINS
+): {
+  surtaxRate: number;
+  isHeavyTax: boolean;
+  heavyTaxReason: string;
+  longTermDeductionRate: number;
+  holdingDeductionRate: number;
+  residenceDeductionRate: number;
+  canApplyLongTermDeduction: boolean;
+} {
+  // 1주택자: 비과세/장특공 혜택
+  if (housingCount === 1) {
+    const rates = calculateLongTermDeductionRate(holdingYears, residenceYears, config);
+    return {
+      surtaxRate: 0,
+      isHeavyTax: false,
+      heavyTaxReason: "",
+      longTermDeductionRate: rates.total,
+      holdingDeductionRate: rates.holding,
+      residenceDeductionRate: rates.residence,
+      canApplyLongTermDeduction: holdingYears >= 3,
+    };
+  }
+
+  // 조정대상지역 다주택자
+  if (isRegulatedArea) {
+    const surtaxRate = housingCount === 2
+      ? multiHomeConfig.regulated.twoHomeSurtax    // +20%p
+      : multiHomeConfig.regulated.threeHomeSurtax; // +30%p
+    
+    return {
+      surtaxRate,
+      isHeavyTax: true,
+      heavyTaxReason: housingCount === 2 
+        ? "조정대상지역 2주택" 
+        : "조정대상지역 3주택 이상",
+      longTermDeductionRate: 0,
+      holdingDeductionRate: 0,
+      residenceDeductionRate: 0,
+      canApplyLongTermDeduction: false, // 장특공 배제
+    };
+  }
+
+  // 비조정대상지역 다주택자: 일반 장특공 적용 (연 2%, 최대 30%)
+  let generalLongTermRate = 0;
+  if (holdingYears >= 3) {
+    for (const item of config.longTermDeductionRates) {
+      if (holdingYears >= item.years) {
+        generalLongTermRate = item.rate;
+      }
+    }
+    // 최대 30% 제한
+    generalLongTermRate = Math.min(generalLongTermRate, multiHomeConfig.longTermDeduction.nonRegulatedMultiHomeMaxRate);
+  }
+
+  return {
+    surtaxRate: 0, // 비조정지역은 중과 없음
+    isHeavyTax: false,
+    heavyTaxReason: "",
+    longTermDeductionRate: generalLongTermRate,
+    holdingDeductionRate: generalLongTermRate,
+    residenceDeductionRate: 0,
+    canApplyLongTermDeduction: holdingYears >= 3,
+  };
+}
+
 export function calculatePropertyCapitalGainsTax(
   input: PropertyCapitalGainsTaxInput,
-  config: TaxConfig = DEFAULT_TAX_CONFIG
+  config: TaxConfig = DEFAULT_TAX_CONFIG,
+  multiHomeConfig: MultiHomeCapitalGainsConfig = DEFAULT_MULTI_HOME_CAPITAL_GAINS
 ): PropertyCapitalGainsTaxResult {
-  const { purchasePrice, salePrice, holdingYears, isOneHome, acquisitionCost } = input;
+  const { purchasePrice, salePrice, holdingYears, residenceYears, housingCount, isRegulatedArea, acquisitionCost } = input;
   const { limits } = config;
+  const isOneHome = housingCount === 1;
+
+  // 기본 결과 템플릿 (양도차익 없음/비과세용)
+  const emptyResult = (isTaxExempt: boolean, exemptReason: string): PropertyCapitalGainsTaxResult => ({
+    gain: salePrice - purchasePrice - acquisitionCost,
+    taxableGain: 0,
+    longTermDeduction: 0,
+    longTermDeductionRate: 0,
+    holdingDeductionRate: 0,
+    residenceDeductionRate: 0,
+    basicDeduction: 0,
+    taxableIncome: 0,
+    calculatedTax: 0,
+    localTax: 0,
+    totalTax: 0,
+    isTaxExempt,
+    exemptReason,
+    surtaxRate: 0,
+    isHeavyTax: false,
+    heavyTaxReason: "",
+  });
 
   // 1. 양도차익 계산
   const gain = salePrice - purchasePrice - acquisitionCost;
 
   if (gain <= 0) {
-    return {
-      gain,
-      taxableGain: 0,
-      longTermDeduction: 0,
-      longTermDeductionRate: 0,
-      basicDeduction: 0,
-      taxableIncome: 0,
-      calculatedTax: 0,
-      localTax: 0,
-      totalTax: 0,
-      isTaxExempt: false,
-      exemptReason: "양도차익 없음",
-    };
+    return emptyResult(false, "양도차익 없음");
   }
 
-  // 2. 1세대 1주택 비과세 체크
+  // 2. 1세대 1주택 비과세 체크 (12억 이하 + 2년 이상 보유)
   if (
     isOneHome &&
     salePrice <= limits.oneHomeTaxExemptLimit &&
     holdingYears >= limits.oneHomeMinHoldingYears
   ) {
-    return {
-      gain,
-      taxableGain: 0,
-      longTermDeduction: 0,
-      longTermDeductionRate: 0,
-      basicDeduction: 0,
-      taxableIncome: 0,
-      calculatedTax: 0,
-      localTax: 0,
-      totalTax: 0,
-      isTaxExempt: true,
-      exemptReason: `1세대 1주택 비과세 (${(limits.oneHomeTaxExemptLimit / 100_000_000).toFixed(0)}억 이하, ${limits.oneHomeMinHoldingYears}년 이상 보유)`,
-    };
+    return emptyResult(
+      true,
+      `1세대 1주택 비과세 (${(limits.oneHomeTaxExemptLimit / 100_000_000).toFixed(0)}억 이하, ${limits.oneHomeMinHoldingYears}년 이상 보유)`
+    );
   }
 
-  // 3. 비과세 한도 초과 시 초과분에 대해서만 과세
+  // 3. 비과세 한도 초과 시 초과분에 대해서만 과세 (1주택자만)
   let taxableGain = gain;
   if (
     isOneHome &&
@@ -271,24 +457,23 @@ export function calculatePropertyCapitalGainsTax(
     taxableGain = gain * taxableRatio;
   }
 
-  // 4. 장기보유특별공제 (1세대 1주택, 3년 이상 보유)
-  let longTermDeductionRate = 0;
-  if (isOneHome && holdingYears >= 3) {
-    for (const item of config.longTermDeductionRates) {
-      if (holdingYears >= item.years) {
-        longTermDeductionRate = item.rate;
-      }
-    }
-  }
+  // 4. 다주택자 중과/장특공 정보 조회
+  const multiHomeInfo = getMultiHomeCapitalGainsInfo(
+    housingCount, isRegulatedArea, holdingYears, residenceYears, config, multiHomeConfig
+  );
 
+  // 5. 장기보유특별공제 적용
+  const longTermDeductionRate = multiHomeInfo.longTermDeductionRate;
+  const holdingDeductionRate = multiHomeInfo.holdingDeductionRate;
+  const residenceDeductionRate = multiHomeInfo.residenceDeductionRate;
   const longTermDeduction = taxableGain * longTermDeductionRate;
   const afterLongTermDeduction = taxableGain - longTermDeduction;
 
-  // 5. 기본공제
+  // 6. 기본공제
   const basicDeduction = limits.capitalGainsBasicDeduction;
   const taxableIncome = Math.max(0, afterLongTermDeduction - basicDeduction);
 
-  // 6. 세율 적용
+  // 7. 세율 적용 (다주택 중과 포함)
   let calculatedTax = 0;
   for (const bracket of config.capitalGainsTaxBrackets) {
     if (taxableIncome > bracket.min) {
@@ -296,7 +481,14 @@ export function calculatePropertyCapitalGainsTax(
     }
   }
 
-  // 7. 지방소득세
+  // 8. 다주택 중과세 추가 (조정지역)
+  if (multiHomeInfo.isHeavyTax && multiHomeInfo.surtaxRate > 0) {
+    // 기본세율 누진공제 적용 후 + 중과세율분 추가
+    const surtax = taxableIncome * multiHomeInfo.surtaxRate;
+    calculatedTax = calculatedTax + surtax;
+  }
+
+  // 9. 지방소득세
   const localTax = calculatedTax * limits.localTaxRate;
   const totalTax = calculatedTax + localTax;
 
@@ -305,12 +497,17 @@ export function calculatePropertyCapitalGainsTax(
     taxableGain,
     longTermDeduction,
     longTermDeductionRate,
+    holdingDeductionRate,
+    residenceDeductionRate,
     basicDeduction,
     taxableIncome,
     calculatedTax,
     localTax,
     totalTax,
     isTaxExempt: false,
+    surtaxRate: multiHomeInfo.surtaxRate,
+    isHeavyTax: multiHomeInfo.isHeavyTax,
+    heavyTaxReason: multiHomeInfo.heavyTaxReason,
   };
 }
 

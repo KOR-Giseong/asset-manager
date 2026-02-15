@@ -11,8 +11,6 @@ export const authConfig: NextAuthConfig = {
   pages: {
     signIn: "/login",
   },
-  // ensure a stable secret is provided for JWE encryption/decryption
-  secret: process.env.NEXTAUTH_SECRET,
   session: { strategy: "jwt" },
   callbacks: {
     authorized({ auth }) {

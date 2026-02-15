@@ -5,7 +5,7 @@
 // =========================================
 
 import { useMemo, useState } from "react";
-import { ArrowUp, ArrowDown, Info, Home, Calendar } from "lucide-react";
+import { ArrowUp, ArrowDown, Info, Home, Calendar, MapPin, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import {
   calculatePropertyCapitalGainsTax,
 } from "@/services/taxService";
 import { formatKRW } from "@/lib/format";
+import type { HousingCount } from "@/types/tax";
 
 // =========================================
 // 타입 정의
@@ -27,6 +28,86 @@ interface PropertyTaxCalculatorProps {
 type TabType = "acquisition" | "capital-gains";
 
 // =========================================
+// 주택 수 선택 컴포넌트 (재사용 가능)
+// =========================================
+
+interface HousingCountSelectorProps {
+  value: HousingCount;
+  onChange: (count: HousingCount) => void;
+  label?: string;
+}
+
+function HousingCountSelector({ value, onChange, label = "주택 수" }: HousingCountSelectorProps) {
+  const options: { value: HousingCount; label: string }[] = [
+    { value: 1, label: "1주택" },
+    { value: 2, label: "2주택" },
+    { value: 3, label: "3주택+" },
+  ];
+
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs sm:text-sm">{label}</Label>
+      <div className="flex gap-1.5 sm:gap-2">
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className={`flex-1 rounded-lg px-2 py-2 text-xs font-medium transition-all sm:px-3 sm:text-sm ${
+              value === opt.value
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted/50 text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// =========================================
+// 조정지역 토글 컴포넌트 (재사용 가능)
+// =========================================
+
+interface RegulatedAreaToggleProps {
+  value: boolean;
+  onChange: (isRegulated: boolean) => void;
+}
+
+function RegulatedAreaToggle({ value, onChange }: RegulatedAreaToggleProps) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs sm:text-sm">지역 구분</Label>
+      <div className="flex gap-1.5 sm:gap-2">
+        <button
+          onClick={() => onChange(false)}
+          className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition-all sm:px-3 sm:text-sm ${
+            !value
+              ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30"
+              : "bg-muted/50 text-muted-foreground hover:bg-muted"
+          }`}
+        >
+          <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          비조정지역
+        </button>
+        <button
+          onClick={() => onChange(true)}
+          className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition-all sm:px-3 sm:text-sm ${
+            value
+              ? "bg-orange-500/10 text-orange-600 border border-orange-500/30"
+              : "bg-muted/50 text-muted-foreground hover:bg-muted"
+          }`}
+        >
+          <AlertTriangle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          조정대상지역
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// =========================================
 // 메인 컴포넌트
 // =========================================
 
@@ -35,27 +116,31 @@ export function PropertyTaxCalculator({
 }: PropertyTaxCalculatorProps) {
   const [activeTab, setActiveTab] = useState<TabType>("acquisition");
 
+  // 공통 입력
+  const [housingCount, setHousingCount] = useState<HousingCount>(1);
+  const [isRegulatedArea, setIsRegulatedArea] = useState(false);
+
   // 취득세 입력
   const [purchasePrice, setPurchasePrice] = useState(propertyPurchasePrice || 600_000_000);
-  const [isFirstHome, setIsFirstHome] = useState(true);
   const [isLifeFirstHome, setIsLifeFirstHome] = useState(false);
   const [area, setArea] = useState(85);
 
   // 양도세 입력
   const [salePrice, setSalePrice] = useState(800_000_000);
   const [holdingYears, setHoldingYears] = useState(3);
-  const [isOneHome, setIsOneHome] = useState(true);
+  const [residenceYears, setResidenceYears] = useState(2);
   const [acquisitionCost, setAcquisitionCost] = useState(20_000_000);
 
   // 취득세 계산
   const acquisitionResult = useMemo(() => {
     return calculatePropertyAcquisitionTax({
       purchasePrice,
-      isFirstHome,
+      housingCount,
+      isRegulatedArea,
       isLifeFirstHome,
       area,
     });
-  }, [purchasePrice, isFirstHome, isLifeFirstHome, area]);
+  }, [purchasePrice, housingCount, isRegulatedArea, isLifeFirstHome, area]);
 
   // 양도세 계산
   const capitalGainsResult = useMemo(() => {
@@ -63,10 +148,12 @@ export function PropertyTaxCalculator({
       purchasePrice: propertyPurchasePrice || purchasePrice,
       salePrice,
       holdingYears,
-      isOneHome,
+      residenceYears,
+      housingCount,
+      isRegulatedArea,
       acquisitionCost,
     });
-  }, [propertyPurchasePrice, purchasePrice, salePrice, holdingYears, isOneHome, acquisitionCost]);
+  }, [propertyPurchasePrice, purchasePrice, salePrice, holdingYears, residenceYears, housingCount, isRegulatedArea, acquisitionCost]);
 
   // 입력값 파싱
   function parseNumber(value: string): number {
@@ -113,10 +200,24 @@ export function PropertyTaxCalculator({
                 부동산 취득세 계산 (2026년 기준)
               </p>
               <p className="text-[10px] text-muted-foreground sm:text-xs">
-                1주택자 기준 취득세율: 6억 이하 1%, 6~9억 2%, 9억 초과 3%.
-                생애최초 주택은 취득세 면제 혜택이 있습니다.
+                1주택: 6억↓1%, 6~9억 2%, 9억↑3%. 
+                2주택(조정) 8%, 3주택+ 12%.
+                생애최초 12억↓ 200만원 감면.
               </p>
             </div>
+          </div>
+
+          {/* 주택 수 및 지역 선택 */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <HousingCountSelector
+              value={housingCount}
+              onChange={setHousingCount}
+              label="취득 후 주택 수"
+            />
+            <RegulatedAreaToggle
+              value={isRegulatedArea}
+              onChange={setIsRegulatedArea}
+            />
           </div>
 
           {/* 입력 폼 */}
@@ -153,27 +254,44 @@ export function PropertyTaxCalculator({
             </div>
           </div>
 
-          {/* 체크박스 옵션 */}
-          <div className="flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 text-xs sm:text-sm">
-              <input
-                type="checkbox"
-                checked={isFirstHome}
-                onChange={(e) => setIsFirstHome(e.target.checked)}
-                className="rounded border-border"
-              />
-              1주택자
-            </label>
-            <label className="flex items-center gap-2 text-xs sm:text-sm">
-              <input
-                type="checkbox"
-                checked={isLifeFirstHome}
-                onChange={(e) => setIsLifeFirstHome(e.target.checked)}
-                className="rounded border-border"
-              />
-              생애최초 주택
-            </label>
-          </div>
+          {/* 생애최초 체크 (1주택만) */}
+          {housingCount === 1 && (
+            <div className="flex flex-wrap gap-4">
+              <label className="flex items-center gap-2 text-xs sm:text-sm">
+                <input
+                  type="checkbox"
+                  checked={isLifeFirstHome}
+                  onChange={(e) => setIsLifeFirstHome(e.target.checked)}
+                  className="rounded border-border"
+                />
+                생애최초 주택 (12억 이하 200만원 감면)
+              </label>
+            </div>
+          )}
+
+          {/* 중과세 경고 */}
+          {acquisitionResult.isHeavyTax && (
+            <div className="rounded-lg border border-orange-500/30 bg-orange-500/10 p-3 sm:p-4">
+              <p className="text-xs font-semibold text-orange-600 sm:text-sm">
+                ⚠️ 중과세 적용: {acquisitionResult.heavyTaxReason}
+              </p>
+              <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+                취득세율 {(acquisitionResult.acquisitionTaxRate * 100).toFixed(0)}% 적용
+              </p>
+            </div>
+          )}
+
+          {/* 생애최초 감면 안내 */}
+          {isLifeFirstHome && acquisitionResult.lifeFirstHomeReduction && acquisitionResult.lifeFirstHomeReduction > 0 && (
+            <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 sm:p-4">
+              <p className="text-xs font-semibold text-emerald-600 sm:text-sm">
+                🎉 생애최초 주택 감면 적용!
+              </p>
+              <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+                취득세 {formatKRW(acquisitionResult.lifeFirstHomeReduction)} 감면 (200만원 한도)
+              </p>
+            </div>
+          )}
 
           {/* 결과 */}
           <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -236,10 +354,24 @@ export function PropertyTaxCalculator({
                 부동산 양도세 계산 (2026년 기준)
               </p>
               <p className="text-[10px] text-muted-foreground sm:text-xs">
-                1세대 1주택 12억 이하, 2년 이상 보유 시 비과세.
-                장기보유특별공제는 3년 이상 보유 시 최대 80%까지 적용됩니다.
+                1주택: 12억↓ 비과세, 장특공 최대 80%.
+                2주택(조정) +20%p 중과, 3주택+ +30%p.
+                조정지역 다주택은 장특공 배제.
               </p>
             </div>
+          </div>
+
+          {/* 주택 수 및 지역 선택 */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <HousingCountSelector
+              value={housingCount}
+              onChange={setHousingCount}
+              label="양도 시점 주택 수"
+            />
+            <RegulatedAreaToggle
+              value={isRegulatedArea}
+              onChange={setIsRegulatedArea}
+            />
           </div>
 
           {/* 입력 폼 */}
@@ -298,6 +430,22 @@ export function PropertyTaxCalculator({
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="residence" className="flex items-center gap-1.5 text-xs sm:text-sm">
+                <Home className="h-3.5 w-3.5 text-rose-500" />
+                거주기간 (년)
+              </Label>
+              <Input
+                id="residence"
+                type="number"
+                value={residenceYears}
+                onChange={(e) => setResidenceYears(parseInt(e.target.value) || 0)}
+                className="text-sm"
+                max={holdingYears}
+              />
+              <p className="text-[9px] text-muted-foreground">장특공 계산용</p>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="cost" className="text-xs sm:text-sm">
                 취득부대비용
               </Label>
@@ -316,18 +464,25 @@ export function PropertyTaxCalculator({
             </div>
           </div>
 
-          {/* 체크박스 */}
-          <div className="flex flex-wrap gap-4">
-            <label className="flex items-center gap-2 text-xs sm:text-sm">
-              <input
-                type="checkbox"
-                checked={isOneHome}
-                onChange={(e) => setIsOneHome(e.target.checked)}
-                className="rounded border-border"
-              />
-              1세대 1주택
-            </label>
-          </div>
+          {/* 중과세 경고 (양도세) */}
+          {capitalGainsResult.isHeavyTax && (
+            <div className="space-y-2">
+              <div className="rounded-lg border border-orange-500/30 bg-orange-500/10 p-3 sm:p-4">
+                <p className="text-xs font-semibold text-orange-600 sm:text-sm">
+                  ⚠️ 중과세 적용: {capitalGainsResult.heavyTaxReason}
+                </p>
+                <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+                  기본세율 + {(capitalGainsResult.surtaxRate * 100).toFixed(0)}%p 중과, 장기보유특별공제 배제
+                </p>
+              </div>
+              <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-3 sm:p-4">
+                <p className="text-[10px] text-blue-600 dark:text-blue-400 sm:text-xs">
+                  💡 현재 다주택자 양도세 중과 유예 중 (~2026.5.9). 유예 기간 내 양도 시 기본세율 적용 및 장특공 가능.
+                  위 금액은 유예 종료 후 기준입니다.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* 비과세 여부 표시 */}
           {capitalGainsResult.isTaxExempt && (
@@ -354,12 +509,18 @@ export function PropertyTaxCalculator({
 
             <Card className="border-emerald-500/20 bg-emerald-500/5 overflow-hidden">
               <CardContent className="p-3 sm:p-4">
-                <p className="text-[9px] text-muted-foreground sm:text-xs">장기보유공제</p>
+                <p className="text-[9px] text-muted-foreground sm:text-xs">장특공</p>
                 <p className="text-sm font-bold text-foreground truncate sm:text-xl">
                   {formatKRW(capitalGainsResult.longTermDeduction)}
                 </p>
                 <p className="mt-1 text-[9px] text-muted-foreground">
-                  {(capitalGainsResult.longTermDeductionRate * 100).toFixed(0)}%
+                  {housingCount === 1 ? (
+                    <>보유 {(capitalGainsResult.holdingDeductionRate * 100).toFixed(0)}% + 거주 {(capitalGainsResult.residenceDeductionRate * 100).toFixed(0)}%</>
+                  ) : capitalGainsResult.isHeavyTax ? (
+                    <>조정지역 다주택: 배제</>
+                  ) : (
+                    <>일반 {(capitalGainsResult.longTermDeductionRate * 100).toFixed(0)}%</>
+                  )}
                 </p>
               </CardContent>
             </Card>
@@ -384,47 +545,94 @@ export function PropertyTaxCalculator({
           </div>
 
           {/* 장기보유특별공제율 안내 */}
-          <div className="overflow-x-auto rounded-lg border border-border/60 -mx-1 sm:mx-0">
-            <table className="w-full text-[10px] sm:text-sm min-w-[200px]">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="px-3 py-2 text-left font-medium">보유기간</th>
-                  <th className="px-3 py-2 text-center font-medium">공제율 (1세대 1주택)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                {[
-                  { years: "3년", rate: "24%" },
-                  { years: "4년", rate: "32%" },
-                  { years: "5년", rate: "40%" },
-                  { years: "6년", rate: "48%" },
-                  { years: "7년", rate: "56%" },
-                  { years: "8년", rate: "64%" },
-                  { years: "9년", rate: "72%" },
-                  { years: "10년 이상", rate: "80%" },
-                ].map((row, index) => (
-                  <tr
-                    key={row.years}
-                    className={
-                      (index === 0 && holdingYears >= 3 && holdingYears < 4) ||
-                      (index === 1 && holdingYears >= 4 && holdingYears < 5) ||
-                      (index === 2 && holdingYears >= 5 && holdingYears < 6) ||
-                      (index === 3 && holdingYears >= 6 && holdingYears < 7) ||
-                      (index === 4 && holdingYears >= 7 && holdingYears < 8) ||
-                      (index === 5 && holdingYears >= 8 && holdingYears < 9) ||
-                      (index === 6 && holdingYears >= 9 && holdingYears < 10) ||
-                      (index === 7 && holdingYears >= 10)
-                        ? "bg-primary/5"
-                        : ""
-                    }
-                  >
-                    <td className="px-3 py-2">{row.years}</td>
-                    <td className="px-3 py-2 text-center font-medium">{row.rate}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {housingCount === 1 ? (
+            // 1주택자: 보유 + 거주 분리 공제
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* 보유기간 공제율 */}
+                <div className="overflow-x-auto rounded-lg border border-border/60">
+                  <table className="w-full text-[10px] sm:text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="px-2 py-1.5 text-left font-medium" colSpan={2}>
+                          📅 보유기간 공제 (연 4%, 최대 40%)
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {[
+                        { years: 3, label: "3년" },
+                        { years: 5, label: "5년" },
+                        { years: 7, label: "7년" },
+                        { years: 10, label: "10년+" },
+                      ].map((row) => {
+                        const rate = Math.min(row.years * 4, 40);
+                        const isActive = holdingYears >= row.years && 
+                          (row.years === 10 || holdingYears < (row.years === 3 ? 5 : row.years === 5 ? 7 : 10));
+                        return (
+                          <tr key={row.label} className={isActive ? "bg-blue-50 dark:bg-blue-950/30" : ""}>
+                            <td className="px-2 py-1.5">{row.label}</td>
+                            <td className="px-2 py-1.5 text-right font-medium text-blue-600 dark:text-blue-400">{rate}%</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* 거주기간 공제율 */}
+                <div className="overflow-x-auto rounded-lg border border-border/60">
+                  <table className="w-full text-[10px] sm:text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="px-2 py-1.5 text-left font-medium" colSpan={2}>
+                          🏠 거주기간 공제 (연 4%, 최대 40%)
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {[
+                        { years: 2, label: "2년" },
+                        { years: 4, label: "4년" },
+                        { years: 6, label: "6년" },
+                        { years: 10, label: "10년+" },
+                      ].map((row) => {
+                        const rate = Math.min(row.years * 4, 40);
+                        const isActive = residenceYears >= row.years && 
+                          (row.years === 10 || residenceYears < (row.years === 2 ? 4 : row.years === 4 ? 6 : 10));
+                        return (
+                          <tr key={row.label} className={isActive ? "bg-green-50 dark:bg-green-950/30" : ""}>
+                            <td className="px-2 py-1.5">{row.label}</td>
+                            <td className="px-2 py-1.5 text-right font-medium text-green-600 dark:text-green-400">{rate}%</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+              <p className="text-[10px] sm:text-xs text-muted-foreground text-center">
+                💡 1세대1주택: 보유 최대 40% + 거주 최대 40% = <span className="font-semibold">최대 80%</span> 공제
+              </p>
+            </div>
+          ) : (
+            // 다주택자: 조정지역 여부에 따른 안내
+            <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
+              <p className="text-xs font-medium sm:text-sm">📋 다주택자 장기보유특별공제</p>
+              {isRegulatedArea ? (
+                <p className="mt-2 text-[10px] text-muted-foreground sm:text-xs">
+                  조정대상지역 다주택자는 <span className="font-semibold text-orange-600">장기보유특별공제가 배제</span>됩니다.
+                  양도차익 전액이 과세대상이 됩니다.
+                </p>
+              ) : (
+                <p className="mt-2 text-[10px] text-muted-foreground sm:text-xs">
+                  비조정지역 다주택자는 <span className="font-semibold text-blue-600">일반 장특공 (연 2%, 최대 30%)</span>가 적용됩니다.
+                  현재 보유기간 {holdingYears}년 기준 공제율: {(capitalGainsResult.longTermDeductionRate * 100).toFixed(0)}%
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
