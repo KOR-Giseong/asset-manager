@@ -38,7 +38,7 @@ export function PageHeader({
         // 테두리 및 그림자
         "border-b border-border/40 shadow-sm",
         // 패딩: 모바일 왼쪽 여백(사이드바용) + 상하 패딩
-        "py-4 pl-8 pr-4 sm:py-5 md:pl-0 md:pr-0",
+        "py-4 pl-6 pr-4 sm:py-5 md:pl-0 md:pr-0",
         // 애니메이션
         "transition-all duration-200",
         className
