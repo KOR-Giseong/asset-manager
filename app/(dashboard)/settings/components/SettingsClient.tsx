@@ -1,7 +1,7 @@
 "use client";
 
 import { FC, useState } from "react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { Sidebar } from "./Sidebar";
 import { AccountSettings } from "./AccountSettings";
 import { PersonalizeSettings } from "./PersonalizeSettings";
@@ -22,6 +22,7 @@ interface SettingsClientProps {
 }
 
 export const SettingsClient: FC<SettingsClientProps> = ({ user }) => {
+  const { update: updateSession } = useSession();
   const [category, setCategory] = useState("account");
   const [dangerModal, setDangerModal] = useState<{
     open: boolean;
@@ -56,7 +57,10 @@ export const SettingsClient: FC<SettingsClientProps> = ({ user }) => {
         return (
           <AccountSettings
             nickname={user.nickname}
-            onNicknameChange={changeNickname}
+            onNicknameChange={async (nickname) => {
+              await changeNickname(nickname);
+              await updateSession();
+            }}
             onLogout={() => signOut({ callbackUrl: "/login" })}
             onDelete={() => setDangerModal({ open: true, type: "delete" })}
           />
@@ -64,8 +68,6 @@ export const SettingsClient: FC<SettingsClientProps> = ({ user }) => {
       case "personalize":
         return (
           <PersonalizeSettings
-            baseCurrency={user.baseCurrency}
-            language={user.language}
             isPrivacyMode={user.isPrivacyMode}
             onChange={(data) => updateSettings(data)}
           />
