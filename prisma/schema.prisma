@@ -8,17 +8,68 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(cuid())
-  name           String?
-  email          String?         @unique
-  emailVerified  DateTime?
-  image          String?
-  annualSalary   Int?            // 연봉 (세전)
-  accounts       Account[]
-  sessions       Session[]
-  assets         Asset[]
-  properties     Property[]
-  assetSnapshots AssetSnapshot[]
+  id                String          @id @default(cuid())
+  name              String?
+  email             String?         @unique
+  emailVerified     DateTime?
+  image             String?
+  annualSalary      Int?            // 연봉 (세전)
+  nickname          String          @unique
+  role              UserRole        @default(USER)
+  baseCurrency      Currency        @default(KRW)
+  isPrivacyMode     Boolean         @default(false)
+  language          Language        @default(KO)
+  allowNotifications Boolean        @default(true)
+  accounts          Account[]
+  sessions          Session[]
+  assets            Asset[]
+  properties        Property[]
+  assetSnapshots    AssetSnapshot[]
+  posts             Post[]
+  notices           Notice[]
+}
+
+// 자유게시판 게시글
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+// 공지/패치노트
+model Notice {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  type      NoticeType
+  createdAt DateTime @default(now())
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum Currency {
+  KRW
+  USD
+  JPY
+}
+
+enum Language {
+  KO
+  EN
+  JP
+}
+
+enum NoticeType {
+  NOTICE
+  PATCH
 }
 
 model Account {

@@ -19,6 +19,8 @@ import {
   ChevronLeft,
   Wallet,
   ShieldCheck,
+  MessageSquare,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -70,6 +72,20 @@ const MENU_ITEMS: MenuItem[] = [
     href: "/tax",
     icon: ShieldCheck,
     description: "세금 계산 및 절세 전략",
+  },
+  {
+    id: "board",
+    label: "게시판",
+    href: "/board",
+    icon: MessageSquare,
+    description: "자유게시판 및 공지사항",
+  },
+  {
+    id: "settings",
+    label: "설정",
+    href: "/settings",
+    icon: Settings,
+    description: "계정 및 환경 설정",
   },
 ];
 
