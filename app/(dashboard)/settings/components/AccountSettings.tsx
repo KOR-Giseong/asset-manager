@@ -40,7 +40,7 @@ export const AccountSettings: FC<AccountSettingsProps> = ({
   };
 
   return (
-    <div className="space-y-8 max-w-lg">
+    <div className="space-y-6 md:space-y-8 w-full max-w-lg">
       {/* 프로필 섹션 */}
       <div>
         <h3 className="text-sm font-semibold text-foreground mb-1">프로필</h3>

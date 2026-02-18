@@ -20,12 +20,12 @@ export const BoardCategoryTabs: FC<BoardCategoryTabsProps> = ({ selected, onSele
   const visible = allCategories.filter((c) => !c.adminOnly || isAdmin);
 
   return (
-    <div className="flex gap-1 flex-wrap">
+    <div className="flex gap-1 flex-nowrap pb-0.5">
       {visible.map((cat) => (
         <button
           key={cat.key}
           className={cn(
-            "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+            "px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap shrink-0",
             selected === cat.key
               ? "bg-primary text-primary-foreground"
               : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"

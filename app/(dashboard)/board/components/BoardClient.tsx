@@ -171,38 +171,41 @@ export const BoardClient: FC<BoardClientProps> = ({
   const isMyTab = category === "mine" || category === "mycomments";
 
   return (
-    <div className="max-w-3xl mx-auto py-8 space-y-5">
+    <div className="max-w-3xl mx-auto px-4 md:px-0 py-6 md:py-8 space-y-4 md:space-y-5">
       {/* 헤더 배너 */}
-      <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 px-6 py-5">
+      <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 px-4 md:px-6 py-4 md:py-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-lg font-bold mb-1">게시판</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-base md:text-lg font-bold mb-1">게시판</h1>
+            <p className="text-xs md:text-sm text-muted-foreground">
               모든 정보를 게시판을 통해 자유롭게 공유해보세요!
-              <br />
-              질문, 정보 공유, 자산 관리 팁 등 무엇이든 환영합니다.
+              <br className="hidden sm:block" />
+              <span className="hidden sm:inline">질문, 정보 공유, 자산 관리 팁 등 무엇이든 환영합니다.</span>
             </p>
           </div>
-          <PenSquare size={32} className="text-primary/30 shrink-0 mt-1" />
+          <PenSquare size={28} className="text-primary/30 shrink-0 mt-0.5 hidden sm:block" />
         </div>
       </div>
 
       {/* 탭 + 글쓰기 버튼 */}
-      <div className="flex items-center justify-between gap-3">
-        <BoardCategoryTabs
-          selected={category}
-          onSelect={(key) => {
-            setCategory(key);
-            setShowEditor(false);
-            setEditing(null);
-            setSearchQuery("");
-          }}
-          isAdmin={isAdmin}
-        />
+      <div className="flex items-center gap-2">
+        <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
+          <BoardCategoryTabs
+            selected={category}
+            onSelect={(key) => {
+              setCategory(key);
+              setShowEditor(false);
+              setEditing(null);
+              setSearchQuery("");
+            }}
+            isAdmin={isAdmin}
+          />
+        </div>
         {isWritableCategory && (
           <Button
             size="sm"
             variant={showEditor ? "ghost" : "default"}
+            className="shrink-0"
             onClick={() => {
               setEditing(null);
               setShowEditor((v) => !v);

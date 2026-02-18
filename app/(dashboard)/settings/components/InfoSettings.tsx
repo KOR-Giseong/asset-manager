@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ExternalLink, Tag } from "lucide-react";
 
 export const InfoSettings: FC = () => (
-  <div className="space-y-8 max-w-lg">
+  <div className="space-y-6 md:space-y-8 w-full max-w-lg">
     <div>
       <h3 className="text-sm font-semibold text-foreground mb-1">앱 정보</h3>
       <p className="text-xs text-muted-foreground mb-4">현재 버전 및 업데이트 정보를 확인합니다.</p>

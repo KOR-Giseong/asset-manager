@@ -168,7 +168,7 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-8 space-y-6">
+    <div className="max-w-3xl mx-auto px-4 md:px-0 py-6 md:py-8 space-y-5 md:space-y-6">
       {/* 신고 모달 */}
       {reportTarget && (
         <ReportModal

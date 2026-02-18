@@ -93,9 +93,9 @@ export const SettingsClient: FC<SettingsClientProps> = ({ user }) => {
   };
 
   return (
-    <div className="flex h-full min-h-[600px]">
+    <div className="flex flex-col md:flex-row h-full min-h-[600px]">
       <Sidebar selected={category} onSelect={setCategory} />
-      <main className="flex-1 overflow-y-auto p-8">{renderContent()}</main>
+      <main className="flex-1 overflow-y-auto p-4 md:p-8">{renderContent()}</main>
       <DangerZoneModal
         open={dangerModal.open}
         onClose={() => setDangerModal({ open: false, type: "reset" })}
