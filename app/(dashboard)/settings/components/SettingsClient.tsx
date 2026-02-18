@@ -1,6 +1,7 @@
 "use client";
 
 import { FC, useState } from "react";
+import { usePrivacyMode } from "@/components/privacy-mode-context";
 import { signOut, useSession } from "next-auth/react";
 import { Sidebar } from "./Sidebar";
 import { AccountSettings } from "./AccountSettings";
@@ -28,6 +29,7 @@ export const SettingsClient: FC<SettingsClientProps> = ({ user }) => {
     open: boolean;
     type: "reset" | "delete";
   }>({ open: false, type: "reset" });
+  const { isPrivacyMode, setPrivacyMode } = usePrivacyMode();
 
   const handleExport = async () => {
     const csv = await exportCSV();
@@ -68,8 +70,10 @@ export const SettingsClient: FC<SettingsClientProps> = ({ user }) => {
       case "personalize":
         return (
           <PersonalizeSettings
-            isPrivacyMode={user.isPrivacyMode}
-            onChange={(data) => updateSettings(data)}
+            isPrivacyMode={isPrivacyMode}
+            onChange={({ isPrivacyMode }) => {
+              if (typeof isPrivacyMode === "boolean") setPrivacyMode(isPrivacyMode);
+            }}
           />
         );
       case "data":
@@ -91,7 +95,7 @@ export const SettingsClient: FC<SettingsClientProps> = ({ user }) => {
   return (
     <div className="flex h-full min-h-[600px]">
       <Sidebar selected={category} onSelect={setCategory} />
-      <main className="flex-1 p-8">{renderContent()}</main>
+      <main className="flex-1 overflow-y-auto p-8">{renderContent()}</main>
       <DangerZoneModal
         open={dangerModal.open}
         onClose={() => setDangerModal({ open: false, type: "reset" })}
