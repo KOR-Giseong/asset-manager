@@ -18,7 +18,7 @@ export const PushProvider = ({ children }: { children: React.ReactNode }) => {
 
   const subscribe = async () => {
     if (!("serviceWorker" in navigator)) return;
-    const reg = await navigator.serviceWorker.register("/service-worker.js");
+    await navigator.serviceWorker.register("/service-worker.js");
     const perm = await Notification.requestPermission();
     setPermission(perm);
     // 실제 푸시 구독(서버 연동)은 별도 구현 필요
