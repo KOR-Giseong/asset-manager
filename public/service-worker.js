@@ -1,24 +1,37 @@
-self.addEventListener('push', function(event) {
-  const data = event.data ? event.data.json() : {};
-  const title = data.title || '알림';
-  const options = {
-    body: data.body || '',
-    icon: data.icon || '/icon.png',
-    badge: data.badge || '/badge.png',
-  };
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
+﻿// Asset Manager Service Worker
+
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener("push", (event) => {
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || "Asset Manager";
+  const options = {
+    body: data.body || "",
+    icon: "/asset-manager-logo.png",
+    badge: "/asset-manager-logo.png",
+    tag: data.tag || "default",
+    data: { url: data.url || "/cashflow" },
+    requireInteraction: false,
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+  const targetUrl = event.notification.data?.url || "/cashflow";
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then(function(clientList) {
-      if (clientList.length > 0) {
-        return clientList[0].focus();
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(targetUrl) && "focus" in client) {
+          return client.focus();
+        }
       }
-      return clients.openWindow('/');
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
     })
   );
 });

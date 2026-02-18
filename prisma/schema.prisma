@@ -29,6 +29,20 @@ model User {
   notices           Notice[]
   comments          Comment[]
   reports           Report[]
+  pushSubscriptions PushSubscription[]
+}
+
+// 웹 푸시 구독 정보
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // 자유게시판 게시글
