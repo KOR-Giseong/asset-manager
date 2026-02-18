@@ -1,11 +1,48 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { Adapter } from "next-auth/adapters";
 import { prisma } from "@/lib/prisma";
 import { authConfig } from "@/auth.config";
 
+/**
+ * PrismaAdapter는 nickname(NOT NULL, UNIQUE) 필드를 모르기 때문에
+ * createUser를 오버라이드하여 자동으로 기본 닉네임을 생성합니다.
+ */
+function createAdapter(): Adapter {
+  const base = PrismaAdapter(prisma);
+  return {
+    ...base,
+    async createUser(data) {
+      const rawBase =
+        data.name?.replace(/[^a-zA-Z0-9가-힣]/g, "").slice(0, 16) ||
+        data.email?.split("@")[0] ||
+        "user";
+      const base = rawBase || "user";
+
+      // 닉네임 중복 시 숫자 접미사 추가
+      let nickname = base;
+      let i = 1;
+      while (await prisma.user.findUnique({ where: { nickname } })) {
+        nickname = `${base}${i++}`;
+      }
+
+      return prisma.user.create({
+        data: {
+          name: data.name,
+          email: data.email!,
+          emailVerified: data.emailVerified ?? null,
+          image: data.image ?? null,
+          nickname,
+          role: "USER",
+        },
+      }) as ReturnType<NonNullable<Adapter["createUser"]>>;
+    },
+  };
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma),
+  adapter: createAdapter(),
   callbacks: {
     ...authConfig.callbacks,
     async jwt({ token, user, trigger }) {
