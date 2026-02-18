@@ -8,7 +8,6 @@ import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { Loader2, TrendingUp } from "lucide-react";
-import { SidebarLayout } from "@/components/layout";
 import { PageHeader } from "@/components/ui/page-header";
 import { AssetTrendChart } from "@/components/asset-trend-chart";
 
@@ -29,11 +28,9 @@ export default function HistoryPage() {
   // 로딩 상태
   if (status === "loading") {
     return (
-      <SidebarLayout>
-        <div className="flex min-h-screen items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </SidebarLayout>
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
@@ -43,20 +40,18 @@ export default function HistoryPage() {
   }
 
   return (
-    <SidebarLayout>
-      <div className="min-h-screen">
-        <PageHeader
-          title="자산 히스토리"
-          subtitle="날짜별 자산 변동 추이를 확인하세요."
-          icon={TrendingUp}
-          iconColor="bg-green-500/10"
-          iconTextColor="text-green-500"
-        />
+    <div className="min-h-screen">
+      <PageHeader
+        title="자산 히스토리"
+        subtitle="날짜별 자산 변동 추이를 확인하세요."
+        icon={TrendingUp}
+        iconColor="bg-green-500/10"
+        iconTextColor="text-green-500"
+      />
 
-        <div className="container max-w-5xl px-4 py-6">
-          <AssetTrendChart />
-        </div>
+      <div className="container max-w-5xl px-4 py-6">
+        <AssetTrendChart />
       </div>
-    </SidebarLayout>
+    </div>
   );
 }

@@ -2,7 +2,6 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 import { TaxCenter } from "@/components/tax/tax-center";
-import { SidebarLayout } from "@/components/layout";
 import { PageHeader } from "@/components/ui/page-header";
 import { prisma } from "@/lib/prisma";
 
@@ -71,19 +70,17 @@ export default async function TaxPage() {
   };
 
   return (
-    <SidebarLayout>
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-        <PageHeader
-          title="세금 & 절세 마스터 센터"
-          subtitle="2026년 최신 세법 기준 · 맞춤형 절세 전략"
-          icon={ShieldCheck}
-          iconGradient="from-violet-500 to-purple-600"
-        />
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <PageHeader
+        title="세금 & 절세 마스터 센터"
+        subtitle="2026년 최신 세법 기준 · 맞춤형 절세 전략"
+        icon={ShieldCheck}
+        iconGradient="from-violet-500 to-purple-600"
+      />
 
-        <div className="container max-w-6xl px-4 py-6">
-          <TaxCenter initialData={initialData} />
-        </div>
+      <div className="container max-w-6xl px-4 py-6">
+        <TaxCenter initialData={initialData} />
       </div>
-    </SidebarLayout>
+    </div>
   );
 }

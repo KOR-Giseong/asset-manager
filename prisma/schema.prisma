@@ -27,6 +27,8 @@ model User {
   assetSnapshots    AssetSnapshot[]
   posts             Post[]
   notices           Notice[]
+  comments          Comment[]
+  reports           Report[]
 }
 
 // 자유게시판 게시글
@@ -35,8 +37,53 @@ model Post {
   title     String
   content   String   @db.Text
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
   authorId  String
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category  String?  // 자유, QnA, 정보, 기타 등
+  isAnonymous Boolean @default(false)
+  comments  Comment[]
+  reports   Report[]
+  commentCount Int    @default(0)
+  reportCount  Int    @default(0)
+}
+// 댓글 모델
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentId  String?  // 대댓글용
+  parent    Comment? @relation("CommentToComment", fields: [parentId], references: [id])
+  children  Comment[] @relation("CommentToComment")
+  isAnonymous Boolean @default(false)
+  reports   Report[]
+  reportCount Int    @default(0)
+}
+
+// 신고 모델
+model Report {
+  id        String   @id @default(cuid())
+  reason    String   // 신고 사유
+  createdAt DateTime @default(now())
+  status    ReportStatus @default(PENDING)
+  reporterId String
+  reporter   User    @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  // 신고 대상 (게시글/댓글)
+  postId     String?
+  post       Post?   @relation(fields: [postId], references: [id])
+  commentId  String?
+  comment    Comment? @relation(fields: [commentId], references: [id])
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  REJECTED
 }
 
 // 공지/패치노트

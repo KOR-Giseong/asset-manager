@@ -26,6 +26,36 @@ export async function resetUserData(userId: string) {
 }
 
 export async function exportUserData(userId: string) {
-  // CSV 변환 로직은 생략 (예시)
-  return "id,title,amount\n1,Sample,1000";
+  const assets = await prisma.asset.findMany({ where: { userId } });
+  const properties = await prisma.property.findMany({ where: { userId } });
+
+  const lines: string[] = [];
+
+  // 자산 섹션
+  lines.push("=== 자산 ===");
+  lines.push("이름,유형,매수금액,평가금액,수익률,종목코드,매수단가,수량");
+  for (const a of assets) {
+    const returnRate = a.amount > 0
+      ? (((a.currentPrice - a.amount) / a.amount) * 100).toFixed(2) + "%"
+      : "0%";
+    lines.push([
+      a.name, a.type, a.amount, a.currentPrice, returnRate,
+      a.symbol ?? "", a.purchasePrice ?? "", a.quantity ?? "",
+    ].join(","));
+  }
+
+  // 부동산 섹션
+  lines.push("");
+  lines.push("=== 부동산 ===");
+  lines.push("이름,유형,계약형태,주소,매수가,현재시세,대출원금,대출이자율,보증금,월세,관리비");
+  for (const p of properties) {
+    lines.push([
+      p.name, p.propertyType, p.contractType, p.address,
+      p.purchasePrice, p.currentPrice, p.loanPrincipal, p.loanInterestRate,
+      p.deposit, p.monthlyRent, p.maintenanceFee,
+    ].join(","));
+  }
+
+  // BOM 추가 (엑셀에서 한글 깨짐 방지)
+  return "\uFEFF" + lines.join("\n");
 }

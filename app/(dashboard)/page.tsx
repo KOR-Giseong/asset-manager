@@ -14,12 +14,10 @@ import { AssetTrendChart } from "@/components/asset-trend-chart";
 import { RefreshButton } from "@/components/refresh-button";
 import { UserNav } from "@/components/user-nav";
 import { PropertySummaryCard } from "@/components/property";
-import { SidebarLayout } from "@/components/layout";
 import { PageHeader } from "@/components/ui/page-header";
-import { LoginButton } from "@/components/login-button";
 import { getAssets } from "@/app/actions/asset-actions";
 import { getProperties } from "@/app/actions/property-actions";
-import { formatKRW } from "@/lib/format";
+import { FormattedCurrency } from "@/components/formatted-currency";
 import { calculateTotalAssets, calculateCategoryTotals } from "@/lib/asset-utils";
 import { calculatePortfolioSummary } from "@/services/propertyService";
 import type { AssetCategory, ChartDataItem } from "@/types/asset";
@@ -37,48 +35,11 @@ const CATEGORIES = [
 ] as const;
 
 // =========================================
-// 비로그인 랜딩 페이지
-// =========================================
-
-function LandingPage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md text-center">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">
-            자산 관리 대시보드
-          </h1>
-          <p className="mt-3 text-lg text-muted-foreground">
-            나의 자산을 한눈에 관리하고 분석하세요
-          </p>
-        </div>
-        <Card className="border-border/60 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-xl">시작하기</CardTitle>
-            <CardDescription>
-              Google 계정으로 로그인하여 자산 관리를 시작하세요
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <LoginButton />
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-// =========================================
-// 메인 페이지
+// 메인 페이지 (인증은 (dashboard) layout에서 처리)
 // =========================================
 
 export default async function Home() {
   const session = await auth();
-
-  if (!session?.user) {
-    return <LandingPage />;
-  }
-
   const assets = await getAssets();
   const properties = await getProperties();
   
@@ -101,7 +62,6 @@ export default async function Home() {
   }));
 
   return (
-    <SidebarLayout>
       <div className="min-h-screen bg-background">
         <PageHeader
           title="대시보드"
@@ -112,7 +72,7 @@ export default async function Home() {
         >
           <RefreshButton />
           <AddAssetDialog />
-          <UserNav user={session.user} />
+          <UserNav user={session!.user} />
         </PageHeader>
 
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
@@ -127,7 +87,7 @@ export default async function Home() {
               <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-                    {formatKRW(totalAssets)}
+                    <FormattedCurrency value={totalAssets} />
                   </span>
                 </div>
                 <p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
@@ -170,7 +130,7 @@ export default async function Home() {
                   </CardHeader>
                   <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
                     <div className="truncate text-lg font-bold text-foreground sm:text-2xl">
-                      {formatKRW(amount)}
+                      <FormattedCurrency value={amount} />
                     </div>
                     <div className="mt-2 flex items-center gap-2">
                       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
@@ -214,6 +174,5 @@ export default async function Home() {
           </div>
         </div>
       </div>
-    </SidebarLayout>
   );
 }

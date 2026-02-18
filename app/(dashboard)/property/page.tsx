@@ -8,7 +8,6 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { Loader2, Building2 } from "lucide-react";
-import { SidebarLayout } from "@/components/layout";
 import { PageHeader } from "@/components/ui/page-header";
 import { PropertyDashboard } from "@/components/property/property-dashboard";
 import { getProperties } from "@/app/actions/property-actions";
@@ -49,11 +48,9 @@ export default function PropertyPage() {
   // 로딩 상태
   if (status === "loading" || loading) {
     return (
-      <SidebarLayout>
-        <div className="flex min-h-screen items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </SidebarLayout>
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
@@ -63,20 +60,18 @@ export default function PropertyPage() {
   }
 
   return (
-    <SidebarLayout>
-      <div className="min-h-screen">
-        <PageHeader
-          title="부동산 관리"
-          subtitle={<>보유 부동산을 통합 관리하고<br />현금흐름을 추적하세요.</>}
-          icon={Building2}
-          iconColor="bg-emerald-500/10"
-          iconTextColor="text-emerald-500"
-        />
+    <div className="min-h-screen">
+      <PageHeader
+        title="부동산 관리"
+        subtitle={<>보유 부동산을 통합 관리하고<br />현금흐름을 추적하세요.</>}
+        icon={Building2}
+        iconColor="bg-emerald-500/10"
+        iconTextColor="text-emerald-500"
+      />
 
-        <div className="container max-w-5xl px-4 py-6">
-          <PropertyDashboard properties={properties} />
-        </div>
+      <div className="container max-w-5xl px-4 py-6">
+        <PropertyDashboard properties={properties} />
       </div>
-    </SidebarLayout>
+    </div>
   );
 }

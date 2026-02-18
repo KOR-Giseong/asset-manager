@@ -80,7 +80,7 @@ export const SettingsClient: FC<SettingsClientProps> = ({ user }) => {
         return (
           <DataSettings
             allowNotifications={user.allowNotifications}
-            onChange={(data) => updateSettings(data)}
+            onChange={(data: { allowNotifications?: boolean }) => updateSettings(data)}
             onExport={handleExport}
             onReset={() => setDangerModal({ open: true, type: "reset" })}
           />

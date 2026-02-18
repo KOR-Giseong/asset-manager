@@ -1,42 +1,33 @@
 "use client";
 import { FC } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { EyeOff } from "lucide-react";
 
 interface PersonalizeSettingsProps {
-  baseCurrency: string;
-  language: string;
   isPrivacyMode: boolean;
-  onChange: (data: { baseCurrency?: string; language?: string; isPrivacyMode?: boolean }) => void;
+  onChange: (data: { isPrivacyMode?: boolean }) => void;
 }
 
-export const PersonalizeSettings: FC<PersonalizeSettingsProps> = ({ baseCurrency, language, isPrivacyMode, onChange }) => (
-  <div className="space-y-6">
+export const PersonalizeSettings: FC<PersonalizeSettingsProps> = ({ isPrivacyMode, onChange }) => (
+  <div className="space-y-8 max-w-lg">
     <div>
-      <label className="block font-medium mb-1">기본 통화</label>
-      <Select value={baseCurrency} onValueChange={(v) => onChange({ baseCurrency: v })}>
-        <SelectTrigger><SelectValue /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="KRW">KRW (₩)</SelectItem>
-          <SelectItem value="USD">USD ($)</SelectItem>
-          <SelectItem value="JPY">JPY (¥)</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-    <div>
-      <label className="block font-medium mb-1">언어</label>
-      <Select value={language} onValueChange={(v) => onChange({ language: v })}>
-        <SelectTrigger><SelectValue /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="KO">한국어</SelectItem>
-          <SelectItem value="EN">English</SelectItem>
-          <SelectItem value="JP">日本語</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-    <div className="flex items-center gap-2">
-      <Switch checked={isPrivacyMode} onCheckedChange={(v: boolean) => onChange({ isPrivacyMode: v })} />
-      <span>잔액 숨기기 모드</span>
+      <h3 className="text-sm font-semibold text-foreground mb-1">화면 표시</h3>
+      <p className="text-xs text-muted-foreground mb-4">앱의 표시 방식을 설정합니다.</p>
+      <div className="rounded-lg border px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-1.5 rounded-md bg-muted">
+            <EyeOff size={15} className="text-muted-foreground" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">잔액 숨기기 모드</p>
+            <p className="text-xs text-muted-foreground">자산 금액을 *** 으로 표시합니다.</p>
+          </div>
+        </div>
+        <Switch
+          checked={isPrivacyMode}
+          onCheckedChange={(v: boolean) => onChange({ isPrivacyMode: v })}
+        />
+      </div>
     </div>
   </div>
 );
