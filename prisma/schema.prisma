@@ -40,7 +40,7 @@ model Post {
   updatedAt DateTime @updatedAt @default(now())
   authorId  String
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  category  String?  // 자유, QnA, 정보, 기타 등
+  tag       PostTag  @default(FREE)
   isAnonymous Boolean @default(false)
   comments  Comment[]
   reports   Report[]
@@ -92,6 +92,7 @@ model Notice {
   title     String
   content   String   @db.Text
   type      NoticeType
+  isPinned  Boolean  @default(false)
   createdAt DateTime @default(now())
   authorId  String
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
@@ -117,6 +118,12 @@ enum Language {
 enum NoticeType {
   NOTICE
   PATCH
+}
+
+enum PostTag {
+  FREE
+  INFO
+  QUESTION
 }
 
 model Account {

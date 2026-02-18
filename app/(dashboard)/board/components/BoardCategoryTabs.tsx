@@ -3,21 +3,32 @@ import { FC } from "react";
 import { cn } from "@/lib/utils";
 
 const allCategories = [
-  { key: "free", label: "자유게시판", adminOnly: false },
-  { key: "notice", label: "공지사항", adminOnly: true },
-  { key: "patch", label: "패치노트", adminOnly: true },
-  { key: "mine", label: "내 글", adminOnly: false },
-  { key: "mycomments", label: "내 댓글", adminOnly: false },
+  { key: "free", label: "자유게시판", adminOnly: false, myTab: false },
+  { key: "notice", label: "공지사항", adminOnly: true, myTab: false },
+  { key: "patch", label: "패치노트", adminOnly: true, myTab: false },
+  { key: "mine", label: "내 글", adminOnly: false, myTab: true },
+  { key: "mycomments", label: "내 댓글", adminOnly: false, myTab: true },
 ];
 
 interface BoardCategoryTabsProps {
   selected: string;
   onSelect: (key: string) => void;
   isAdmin?: boolean;
+  /** true면 내 글/내 댓글 탭 숨김 (에디터 내부에서 사용) */
+  hideMyTabs?: boolean;
 }
 
-export const BoardCategoryTabs: FC<BoardCategoryTabsProps> = ({ selected, onSelect, isAdmin }) => {
-  const visible = allCategories.filter((c) => !c.adminOnly || isAdmin);
+export const BoardCategoryTabs: FC<BoardCategoryTabsProps> = ({
+  selected,
+  onSelect,
+  isAdmin,
+  hideMyTabs = false,
+}) => {
+  const visible = allCategories.filter((c) => {
+    if (c.adminOnly && !isAdmin) return false;
+    if (hideMyTabs && c.myTab) return false;
+    return true;
+  });
 
   return (
     <div className="flex gap-1 flex-nowrap pb-0.5">

@@ -1,6 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
+import { PostTag } from "@/types/board";
 import {
   createPost,
   updatePost,
@@ -12,11 +13,13 @@ import {
   deleteCommentService,
   reportPostService,
   reportCommentService,
+  pinNoticeService,
 } from "@/services/boardService";
 
 export async function writePost(data: {
   title: string;
   content: string;
+  tag?: PostTag;
   isAnonymous?: boolean;
 }) {
   const user = await getCurrentUser();
@@ -24,7 +27,10 @@ export async function writePost(data: {
   revalidatePath("/board");
 }
 
-export async function editPost(id: string, data: { title: string; content: string }) {
+export async function editPost(
+  id: string,
+  data: { title: string; content: string; tag?: PostTag }
+) {
   const user = await getCurrentUser();
   await updatePost(id, data, user);
   revalidatePath("/board");
@@ -40,6 +46,7 @@ export async function writeNotice(data: {
   title: string;
   content: string;
   type: "NOTICE" | "PATCH";
+  isPinned?: boolean;
 }) {
   const user = await getCurrentUser();
   if (user.role !== "ADMIN") throw new Error("권한 없음");
@@ -49,7 +56,7 @@ export async function writeNotice(data: {
 
 export async function editNotice(
   id: string,
-  data: { title: string; content: string; type: "NOTICE" | "PATCH" }
+  data: { title: string; content: string; type: "NOTICE" | "PATCH"; isPinned?: boolean }
 ) {
   const user = await getCurrentUser();
   if (user.role !== "ADMIN") throw new Error("권한 없음");
@@ -61,6 +68,12 @@ export async function removeNotice(id: string) {
   const user = await getCurrentUser();
   if (user.role !== "ADMIN") throw new Error("권한 없음");
   await deleteNotice(id, user);
+  revalidatePath("/board");
+}
+
+export async function togglePinNotice(id: string, isPinned: boolean) {
+  const user = await getCurrentUser();
+  await pinNoticeService(id, isPinned, user);
   revalidatePath("/board");
 }
 

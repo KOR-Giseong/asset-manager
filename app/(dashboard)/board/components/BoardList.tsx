@@ -1,6 +1,7 @@
 "use client";
 import { FC } from "react";
 import { BoardItem } from "./BoardItem";
+import { PostTag } from "@/types/board";
 
 interface SerializedPost {
   id: string;
@@ -8,7 +9,11 @@ interface SerializedPost {
   content: string;
   createdAt: string;
   authorId: string;
+  authorNickname?: string;
   isMine?: boolean;
+  isAnonymous?: boolean;
+  commentCount?: number;
+  tag?: PostTag;
 }
 
 interface BoardListProps {

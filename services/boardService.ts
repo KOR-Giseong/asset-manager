@@ -1,27 +1,29 @@
 import { prisma } from "@/lib/prisma";
 import { User } from "@/types/user";
-import { NoticeType } from "@/types/board";
+import { NoticeType, PostTag } from "@/types/board";
 import {
   getPostDetail,
   createComment,
   createReport,
   deleteComment,
   getMyComments,
+  createPostRepo,
+  updateNoticePinned,
 } from "@/repositories/board-repository";
 
 export async function createPost(data: {
   title: string;
   content: string;
   authorId: string;
+  tag?: PostTag;
   isAnonymous?: boolean;
 }) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (prisma.post.create as any)({ data });
+  return createPostRepo(data);
 }
 
 export async function updatePost(
   id: string,
-  data: { title: string; content: string },
+  data: { title: string; content: string; tag?: PostTag },
   user: User
 ) {
   const post = await prisma.post.findUnique({ where: { id } });
@@ -41,14 +43,15 @@ export async function createNotice(data: {
   title: string;
   content: string;
   type: NoticeType;
+  isPinned?: boolean;
   authorId: string;
 }) {
-  return prisma.notice.create({ data });
+  return prisma.notice.create({ data: { ...data, isPinned: data.isPinned ?? false } });
 }
 
 export async function updateNotice(
   id: string,
-  data: { title: string; content: string; type: NoticeType },
+  data: { title: string; content: string; type: NoticeType; isPinned?: boolean },
   user: User
 ) {
   const notice = await prisma.notice.findUnique({ where: { id } });
@@ -62,6 +65,11 @@ export async function deleteNotice(id: string, user: User) {
   if (!notice) throw new Error("공지 없음");
   if (notice.authorId !== user.id && user.role !== "ADMIN") throw new Error("권한 없음");
   return prisma.notice.delete({ where: { id } });
+}
+
+export async function pinNoticeService(id: string, isPinned: boolean, user: User) {
+  if (user.role !== "ADMIN") throw new Error("권한 없음");
+  return updateNoticePinned(id, isPinned);
 }
 
 export async function getBoardDetailServer(postId: string) {
@@ -104,7 +112,6 @@ export async function reportPostService({
   postId: string;
   reason: string;
 }) {
-  // 중복 신고 방지
   const existing = await prisma.report.findFirst({
     where: { reporterId, postId },
   });

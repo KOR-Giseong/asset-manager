@@ -4,8 +4,10 @@ import { FC, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, MessageSquare, CornerDownRight, Flag, Trash2 } from "lucide-react";
+import { ArrowLeft, MessageSquare, CornerDownRight, Flag, Trash2, HelpCircle } from "lucide-react";
 import { addComment, removeComment, reportPost, reportComment } from "@/actions/board";
+import { PostTag } from "@/types/board";
+import { cn } from "@/lib/utils";
 
 interface Author {
   id: string;
@@ -37,6 +39,7 @@ interface SerializedPost {
   content: string;
   createdAt: string;
   authorId: string;
+  tag?: PostTag;
   isAnonymous?: boolean;
   author: Author;
   comments: SerializedComment[];
@@ -58,6 +61,12 @@ function displayName(
   if (!isAnonymous) return authorNickname;
   return authorId === currentUserId ? "익명 (나)" : "익명";
 }
+
+const TAG_BADGE: Record<PostTag, { label: string; cls: string }> = {
+  FREE: { label: "자유글", cls: "bg-muted text-muted-foreground" },
+  INFO: { label: "정보공유", cls: "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400" },
+  QUESTION: { label: "질문", cls: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400" },
+};
 
 // 신고 모달
 function ReportModal({
@@ -113,6 +122,9 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
   const [reportTarget, setReportTarget] = useState<
     { type: "post"; id: string } | { type: "comment"; id: string } | null
   >(null);
+
+  const tag = post.tag ?? "FREE";
+  const isQuestion = tag === "QUESTION";
 
   const totalCount = post.comments.reduce(
     (acc, c) => acc + 1 + c.children.length,
@@ -191,7 +203,14 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
       {/* 게시글 */}
       <div className="rounded-xl border bg-card p-6 space-y-4">
         <div className="space-y-1">
-          <h1 className="text-xl font-bold leading-snug">{post.title}</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            {tag !== "FREE" && (
+              <span className={cn("border rounded-full px-2 py-0.5 text-xs font-medium", TAG_BADGE[tag].cls)}>
+                {TAG_BADGE[tag].label}
+              </span>
+            )}
+            <h1 className="text-xl font-bold leading-snug">{post.title}</h1>
+          </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span className="font-medium text-foreground">
@@ -222,16 +241,18 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
         </div>
       </div>
 
-      {/* 댓글 섹션 */}
+      {/* 댓글/답변 섹션 */}
       <div className="space-y-3">
-        <div className="flex items-center gap-1.5 text-sm font-semibold">
-          <MessageSquare size={15} />
-          댓글 {totalCount}
+        <div className={cn("flex items-center gap-1.5 text-sm font-semibold", isQuestion && "text-amber-600 dark:text-amber-400")}>
+          {isQuestion ? <HelpCircle size={15} /> : <MessageSquare size={15} />}
+          {isQuestion ? `답변 ${totalCount}` : `댓글 ${totalCount}`}
         </div>
 
         {post.comments.length === 0 && (
           <p className="text-sm text-muted-foreground py-6 text-center">
-            아직 댓글이 없습니다. 첫 댓글을 남겨보세요!
+            {isQuestion
+              ? "아직 답변이 없습니다. 첫 답변을 달아보세요!"
+              : "아직 댓글이 없습니다. 첫 댓글을 남겨보세요!"}
           </p>
         )}
 
@@ -247,8 +268,8 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
 
           return (
             <div key={comment.id} className="space-y-2">
-              {/* 댓글 */}
-              <div className="rounded-lg border bg-card p-4">
+              {/* 댓글/답변 */}
+              <div className={cn("rounded-lg border bg-card p-4", isQuestion && "border-amber-200/60 dark:border-amber-800/40")}>
                 <div className="flex items-center gap-1.5 text-xs mb-2">
                   <span className="font-medium">{name}</span>
                   <span className="text-muted-foreground">·</span>
@@ -262,7 +283,7 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
                         setReplyTo(replyTo === comment.id ? null : comment.id)
                       }
                     >
-                      답글
+                      {isQuestion ? "대댓글" : "답글"}
                     </button>
                     {comment.authorId !== currentUserId && (
                       <button
@@ -401,13 +422,15 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
           );
         })}
 
-        {/* 댓글 입력 */}
+        {/* 댓글/답변 입력 */}
         <div className="rounded-xl border bg-card p-4 space-y-3 mt-2">
-          <p className="text-xs font-medium text-muted-foreground">댓글 작성</p>
+          <p className="text-xs font-medium text-muted-foreground">
+            {isQuestion ? "답변 작성" : "댓글 작성"}
+          </p>
           <Textarea
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
-            placeholder="댓글을 입력하세요..."
+            placeholder={isQuestion ? "답변을 입력하세요..." : "댓글을 입력하세요..."}
             rows={3}
           />
           <div className="flex items-center justify-between">
@@ -424,7 +447,7 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
               disabled={submitting || !commentText.trim()}
               onClick={handleAddComment}
             >
-              등록
+              {isQuestion ? "답변 등록" : "등록"}
             </Button>
           </div>
         </div>

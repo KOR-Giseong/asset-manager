@@ -13,11 +13,12 @@ import {
   writeNotice,
   editNotice,
   removeNotice,
+  togglePinNotice,
 } from "@/actions/board";
-import type { NoticeType } from "@/types/board";
+import type { NoticeType, PostTag } from "@/types/board";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PenSquare, Search, MessageSquare, ExternalLink } from "lucide-react";
+import { PenSquare, Search, MessageSquare, ExternalLink, Pin, PinOff } from "lucide-react";
 
 interface SerializedPost {
   id: string;
@@ -29,6 +30,7 @@ interface SerializedPost {
   isMine?: boolean;
   isAnonymous?: boolean;
   commentCount?: number;
+  tag?: PostTag;
 }
 
 interface SerializedNotice {
@@ -36,6 +38,7 @@ interface SerializedNotice {
   title: string;
   content: string;
   type: NoticeType;
+  isPinned: boolean;
   createdAt: string;
   authorId: string;
   authorNickname?: string;
@@ -74,7 +77,11 @@ export const BoardClient: FC<BoardClientProps> = ({
     content?: string;
     category?: string;
     type?: NoticeType;
+    tag?: PostTag;
+    isPinned?: boolean;
   } | null>(null);
+
+  const pinnedNotices = useMemo(() => notices.filter((n) => n.isPinned), [notices]);
 
   const filteredPosts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -102,16 +109,19 @@ export const BoardClient: FC<BoardClientProps> = ({
     content: string;
     type?: NoticeType;
     category: string;
+    tag?: PostTag;
     isAnonymous?: boolean;
+    isPinned?: boolean;
   }) => {
     if (editing?.id) {
       if (data.category === "free") {
-        await editPost(editing.id, { title: data.title, content: data.content });
+        await editPost(editing.id, { title: data.title, content: data.content, tag: data.tag });
       } else {
         await editNotice(editing.id, {
           title: data.title,
           content: data.content,
           type: data.type!,
+          isPinned: data.isPinned,
         });
       }
     } else {
@@ -119,6 +129,7 @@ export const BoardClient: FC<BoardClientProps> = ({
         await writePost({
           title: data.title,
           content: data.content,
+          tag: data.tag,
           isAnonymous: data.isAnonymous,
         });
       } else {
@@ -126,6 +137,7 @@ export const BoardClient: FC<BoardClientProps> = ({
           title: data.title,
           content: data.content,
           type: data.type!,
+          isPinned: data.isPinned,
         });
       }
     }
@@ -136,7 +148,7 @@ export const BoardClient: FC<BoardClientProps> = ({
   const handleEditPost = (id: string) => {
     const post = posts.find((p) => p.id === id);
     if (post) {
-      setEditing({ id, title: post.title, content: post.content, category: "free" });
+      setEditing({ id, title: post.title, content: post.content, category: "free", tag: post.tag });
       setShowEditor(true);
     }
   };
@@ -155,6 +167,7 @@ export const BoardClient: FC<BoardClientProps> = ({
         content: notice.content,
         category: notice.type === "NOTICE" ? "notice" : "patch",
         type: notice.type,
+        isPinned: notice.isPinned,
       });
       setShowEditor(true);
     }
@@ -163,6 +176,10 @@ export const BoardClient: FC<BoardClientProps> = ({
   const handleDeleteNotice = async (id: string) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
     await removeNotice(id);
+  };
+
+  const handleTogglePin = async (id: string, current: boolean) => {
+    await togglePinNotice(id, !current);
   };
 
   const isWritableCategory =
@@ -262,6 +279,9 @@ export const BoardClient: FC<BoardClientProps> = ({
                     <span className="text-xs font-semibold text-primary">
                       [{notice.type === "NOTICE" ? "공지" : "패치"}]
                     </span>
+                    {notice.isPinned && (
+                      <Pin size={12} className="text-primary" />
+                    )}
                     <span className="text-sm font-medium">{notice.title}</span>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -269,7 +289,14 @@ export const BoardClient: FC<BoardClientProps> = ({
                   </p>
                 </div>
                 {isAdmin && (
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex gap-2 shrink-0 items-center">
+                    <button
+                      className={`text-xs transition-colors ${notice.isPinned ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-primary"}`}
+                      title={notice.isPinned ? "자유게시판 고정 해제" : "자유게시판 상단에 고정"}
+                      onClick={() => handleTogglePin(notice.id, notice.isPinned)}
+                    >
+                      {notice.isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+                    </button>
                     <button
                       className="text-xs text-primary hover:underline"
                       onClick={() => handleEditNotice(notice.id)}
@@ -299,12 +326,49 @@ export const BoardClient: FC<BoardClientProps> = ({
       {/* 자유게시판 / 내 글 탭 */}
       {(category === "free" || category === "mine") && (
         <div className="space-y-3">
-          <BoardStickyNotice
-            notices={notices}
-            isAdmin={isAdmin}
-            onEdit={handleEditNotice}
-            onDelete={handleDeleteNotice}
-          />
+          {/* 고정 공지 (자유게시판 탭에서만 표시) */}
+          {category === "free" && pinnedNotices.length > 0 && (
+            <div className="space-y-1.5">
+              {pinnedNotices.map((notice) => (
+                <div
+                  key={notice.id}
+                  className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 flex items-center gap-2"
+                >
+                  <Pin size={12} className="text-primary shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-primary">
+                        [{notice.type === "NOTICE" ? "공지" : "패치"}]
+                      </span>
+                      <span className="text-sm font-medium truncate">{notice.title}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {new Date(notice.createdAt).toLocaleDateString("ko-KR")}
+                    </p>
+                  </div>
+                  {isAdmin && (
+                    <button
+                      className="text-xs text-primary hover:text-primary/70 shrink-0"
+                      title="고정 해제"
+                      onClick={() => handleTogglePin(notice.id, notice.isPinned)}
+                    >
+                      <PinOff size={13} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <div className="border-b" />
+            </div>
+          )}
+
+          {category === "free" && (
+            <BoardStickyNotice
+              notices={notices}
+              isAdmin={isAdmin}
+              onEdit={handleEditNotice}
+              onDelete={handleDeleteNotice}
+            />
+          )}
           {filteredPosts.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               {searchQuery

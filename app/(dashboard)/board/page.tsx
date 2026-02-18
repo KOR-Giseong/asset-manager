@@ -10,12 +10,12 @@ export default async function BoardPage() {
     getMyCommentsService(user.id),
   ]);
 
-  // Date → string 직렬화
   const serializedNotices = notices.map((n) => ({
     id: n.id,
     title: n.title,
     content: n.content,
     type: n.type,
+    isPinned: n.isPinned,
     createdAt: n.createdAt.toISOString(),
     authorId: n.authorId,
     authorNickname: n.author.nickname,
@@ -25,12 +25,12 @@ export default async function BoardPage() {
     id: p.id,
     title: p.title,
     content: p.content,
+    tag: p.tag,
     createdAt: p.createdAt.toISOString(),
     authorId: p.authorId,
     authorNickname: p.author.nickname,
     isMine: p.authorId === user.id,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    isAnonymous: (p as any).isAnonymous ?? false,
+    isAnonymous: p.isAnonymous,
     commentCount: p._count.comments,
   }));
 
@@ -40,8 +40,7 @@ export default async function BoardPage() {
     createdAt: c.createdAt.toISOString(),
     postId: c.post.id,
     postTitle: c.post.title,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    isAnonymous: (c as any).isAnonymous ?? false,
+    isAnonymous: c.isAnonymous,
   }));
 
   return (

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { PostTag } from "@/types/board";
 
 export async function getBoardData() {
   const notices = await prisma.notice.findMany({
@@ -45,6 +46,24 @@ export async function getPostDetail(postId: string) {
         },
       },
       reports: true,
+    },
+  });
+}
+
+export async function createPostRepo(data: {
+  title: string;
+  content: string;
+  authorId: string;
+  tag?: PostTag;
+  isAnonymous?: boolean;
+}) {
+  return prisma.post.create({
+    data: {
+      title: data.title,
+      content: data.content,
+      authorId: data.authorId,
+      tag: data.tag ?? "FREE",
+      isAnonymous: data.isAnonymous ?? false,
     },
   });
 }
@@ -96,4 +115,8 @@ export async function createReport({
       commentId: commentId || undefined,
     },
   });
+}
+
+export async function updateNoticePinned(id: string, isPinned: boolean) {
+  return prisma.notice.update({ where: { id }, data: { isPinned } });
 }
