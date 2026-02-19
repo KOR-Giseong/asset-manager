@@ -103,34 +103,40 @@ export async function deleteCommentService(commentId: string, user: User) {
   return deleteComment(commentId);
 }
 
+
 export async function reportPostService({
   reporterId,
   postId,
   reason,
+  screenshotUrl,
 }: {
   reporterId: string;
   postId: string;
   reason: string;
+  screenshotUrl?: string;
 }) {
   const existing = await prisma.report.findFirst({
     where: { reporterId, postId },
   });
   if (existing) throw new Error("이미 신고한 게시글입니다.");
-  return createReport({ reporterId, postId, reason });
+  return createReport({ reporterId, postId, reason, screenshotUrl });
 }
+
 
 export async function reportCommentService({
   reporterId,
   commentId,
   reason,
+  screenshotUrl,
 }: {
   reporterId: string;
   commentId: string;
   reason: string;
+  screenshotUrl?: string;
 }) {
   const existing = await prisma.report.findFirst({
     where: { reporterId, commentId },
   });
   if (existing) throw new Error("이미 신고한 댓글입니다.");
-  return createReport({ reporterId, commentId, reason });
+  return createReport({ reporterId, commentId, reason, screenshotUrl });
 }

@@ -94,12 +94,12 @@ export async function removeComment(commentId: string, postId: string) {
   revalidatePath(`/board/${postId}`);
 }
 
-export async function reportPost(postId: string, reason: string) {
+export async function reportPost(postId: string, reason: string, screenshotUrl?: string) {
   const user = await getCurrentUser();
-  await reportPostService({ reporterId: user.id, postId, reason });
+  await reportPostService({ reporterId: user.id, postId, reason, screenshotUrl });
 }
 
-export async function reportComment(commentId: string, reason: string) {
+export async function reportComment(commentId: string, reason: string, screenshotUrl?: string) {
   const user = await getCurrentUser();
-  await reportCommentService({ reporterId: user.id, commentId, reason });
+  await reportCommentService({ reporterId: user.id, commentId, reason, screenshotUrl });
 }

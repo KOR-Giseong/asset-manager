@@ -20,6 +20,9 @@ model User {
   isPrivacyMode     Boolean         @default(false)
   language          Language        @default(KO)
   allowNotifications Boolean        @default(true)
+  suspended         Boolean         @default(false) // 계정 정지 여부
+  suspendedReason   String?         // 계정 정지 사유 (선택)
+  suspendedAppeal   String?         // 해제 신청 사유 (선택)
   accounts          Account[]
   sessions          Session[]
   assets            Asset[]
@@ -83,6 +86,7 @@ model Comment {
 model Report {
   id        String   @id @default(cuid())
   reason    String   // 신고 사유
+  screenshotUrl String? // 첨부 스크린샷 파일 URL (선택)
   createdAt DateTime @default(now())
   status    ReportStatus @default(PENDING)
   reporterId String

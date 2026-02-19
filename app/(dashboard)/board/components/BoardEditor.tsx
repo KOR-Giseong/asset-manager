@@ -63,6 +63,10 @@ export const BoardEditor: FC<BoardEditorProps> = ({ initial, isAdmin, onSubmit, 
 
   return (
     <div className="rounded-xl border bg-card p-5 space-y-4">
+      {/* 작성 가이드 안내문구 */}
+      <div className="mb-2 p-3 rounded bg-muted/50 text-xs text-muted-foreground">
+        ※ 작성 시 타인 비방, 욕설, 성희롱, 개인정보 노출, 불법 정보, 광고 등 금지. 위반 시 제재될 수 있습니다.
+      </div>
       {/* hideMyTabs: 내 글/내 댓글 탭 숨김 */}
       <BoardCategoryTabs
         selected={category}

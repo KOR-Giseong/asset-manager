@@ -44,7 +44,7 @@ export const AccountSettings: FC<AccountSettingsProps> = ({
       {/* 프로필 섹션 */}
       <div>
         <h3 className="text-sm font-semibold text-foreground mb-1">프로필</h3>
-        <p className="text-xs text-muted-foreground mb-4">앱에서 표시될 닉네임을 설정합니다.</p>
+        <p className="text-xs text-muted-foreground mb-4">웹에서 표시될 닉네임을 설정합니다.</p>
         <form onSubmit={handleSubmit(handleNickname)} className="space-y-3">
           <div className="flex gap-2">
             <Input

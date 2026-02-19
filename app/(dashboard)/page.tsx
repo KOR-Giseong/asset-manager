@@ -1,5 +1,6 @@
 import { TrendingUp, Building2, PiggyBank, LayoutDashboard } from "lucide-react";
 import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -40,6 +41,7 @@ const CATEGORIES = [
 
 export default async function Home() {
   const session = await auth();
+  if (!session?.user) redirect("/login");
   const assets = await getAssets();
   const properties = await getProperties();
   
@@ -72,7 +74,7 @@ export default async function Home() {
         >
           <RefreshButton />
           <AddAssetDialog />
-          <UserNav user={session!.user} />
+          <UserNav user={session.user} />
         </PageHeader>
 
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">

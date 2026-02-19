@@ -101,11 +101,13 @@ export async function createReport({
   reason,
   postId,
   commentId,
+  screenshotUrl,
 }: {
   reporterId: string;
   reason: string;
   postId?: string;
   commentId?: string;
+  screenshotUrl?: string;
 }) {
   return prisma.report.create({
     data: {
@@ -113,6 +115,7 @@ export async function createReport({
       reason,
       postId: postId || undefined,
       commentId: commentId || undefined,
+      screenshotUrl: screenshotUrl || undefined,
     },
   });
 }

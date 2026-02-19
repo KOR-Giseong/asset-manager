@@ -55,6 +55,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.isPrivacyMode = user.isPrivacyMode;
         token.language = user.language;
         token.allowNotifications = user.allowNotifications;
+        token.suspended = user.suspended ?? false;
+        token.suspendedReason = user.suspendedReason ?? null;
       }
 
       // 세션 업데이트 시 DB에서 최신 정보 다시 로드
@@ -68,6 +70,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             isPrivacyMode: true,
             language: true,
             allowNotifications: true,
+            suspended: true,
+            suspendedReason: true,
           },
         });
         if (dbUser) {
@@ -77,6 +81,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.isPrivacyMode = dbUser.isPrivacyMode;
           token.language = dbUser.language;
           token.allowNotifications = dbUser.allowNotifications;
+          token.suspended = dbUser.suspended ?? false;
+          token.suspendedReason = dbUser.suspendedReason ?? null;
         }
       }
 

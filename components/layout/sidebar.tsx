@@ -7,6 +7,7 @@
 // =========================================
 
 import { useState, useEffect } from "react";
+import { useUser } from "@/components/user-context";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -37,57 +38,70 @@ interface MenuItem {
   description?: string;
 }
 
-const MENU_ITEMS: MenuItem[] = [
-  {
-    id: "dashboard",
-    label: "대시보드",
-    href: "/",
-    icon: LayoutDashboard,
-    description: "자산 현황 요약",
-  },
-  {
-    id: "history",
-    label: "자산 히스토리",
-    href: "/history",
-    icon: History,
-    description: "자산 변화 추이",
-  },
-  {
-    id: "cashflow",
-    label: "현금흐름 캘린더",
-    href: "/cashflow",
-    icon: CalendarDays,
-    description: "월별 현금 유입",
-  },
-  {
-    id: "property",
-    label: "부동산 관리",
-    href: "/property",
-    icon: Building2,
-    description: "부동산 포트폴리오",
-  },
-  {
-    id: "tax",
-    label: "세금/절세",
-    href: "/tax",
-    icon: ShieldCheck,
-    description: "세금 계산 및 절세 전략",
-  },
-  {
-    id: "board",
-    label: "게시판",
-    href: "/board",
-    icon: MessageSquare,
-    description: "자유게시판 및 공지사항",
-  },
-  {
-    id: "settings",
-    label: "설정",
-    href: "/settings",
-    icon: Settings,
-    description: "계정 및 환경 설정",
-  },
-];
+
+function getMenuItems(isAdmin: boolean): MenuItem[] {
+  const items: MenuItem[] = [
+    {
+      id: "dashboard",
+      label: "대시보드",
+      href: "/",
+      icon: LayoutDashboard,
+      description: "자산 현황 요약",
+    },
+    {
+      id: "history",
+      label: "자산 히스토리",
+      href: "/history",
+      icon: History,
+      description: "자산 변화 추이",
+    },
+    {
+      id: "cashflow",
+      label: "현금흐름 캘린더",
+      href: "/cashflow",
+      icon: CalendarDays,
+      description: "월별 현금 유입",
+    },
+    {
+      id: "property",
+      label: "부동산 관리",
+      href: "/property",
+      icon: Building2,
+      description: "부동산 포트폴리오",
+    },
+    {
+      id: "tax",
+      label: "세금/절세",
+      href: "/tax",
+      icon: ShieldCheck,
+      description: "세금 계산 및 절세 전략",
+    },
+    {
+      id: "board",
+      label: "게시판",
+      href: "/board",
+      icon: MessageSquare,
+      description: "자유게시판 및 공지사항",
+    },
+    {
+      id: "settings",
+      label: "설정",
+      href: "/settings",
+      icon: Settings,
+      description: "계정 및 환경 설정",
+    },
+  ];
+  if (isAdmin) {
+    items.push({
+      id: "admin",
+      label: "관리자",
+      href: "/admin",
+      icon: ShieldCheck,
+      description: "신고 관리 및 계정 정지",
+    });
+  }
+  return items;
+}
 
 // =========================================
 // 사이드바 컴포넌트
@@ -101,6 +115,8 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { user } = useUser();
+  const isAdmin = user?.role === "ADMIN";
 
   // 경로 변경 시 모바일 메뉴 닫기
   useEffect(() => {
@@ -190,10 +206,9 @@ export function Sidebar({ className }: SidebarProps) {
 
         {/* 네비게이션 */}
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-          {MENU_ITEMS.map((item) => {
+          {getMenuItems(isAdmin).map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
-
             return (
               <Link
                 key={item.id}

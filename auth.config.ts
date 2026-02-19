@@ -13,7 +13,7 @@ export const authConfig: NextAuthConfig = {
   pages: {
     signIn: "/login",
   },
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 300 }, // JWT 만료 5분
   callbacks: {
     authorized({ auth }) {
       return !!auth?.user;
@@ -27,6 +27,8 @@ export const authConfig: NextAuthConfig = {
         session.user.isPrivacyMode = token.isPrivacyMode as boolean | undefined;
         session.user.language = token.language as Language | undefined;
         session.user.allowNotifications = token.allowNotifications as boolean | undefined;
+        session.user.suspended = (token.suspended as boolean) ?? false;
+        session.user.suspendedReason = token.suspendedReason as string | null | undefined;
       }
       return session;
     },

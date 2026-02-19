@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const allCategories = [
   { key: "free", label: "자유게시판", adminOnly: false, myTab: false },
-  { key: "notice", label: "공지사항", adminOnly: true, myTab: false },
+  { key: "notice", label: "공지사항", adminOnly: false, myTab: false },
   { key: "patch", label: "패치노트", adminOnly: true, myTab: false },
   { key: "mine", label: "내 글", adminOnly: false, myTab: true },
   { key: "mycomments", label: "내 댓글", adminOnly: false, myTab: true },
@@ -25,7 +25,8 @@ export const BoardCategoryTabs: FC<BoardCategoryTabsProps> = ({
   hideMyTabs = false,
 }) => {
   const visible = allCategories.filter((c) => {
-    if (c.adminOnly && !isAdmin) return false;
+    // 패치노트만 adminOnly, 공지사항은 항상 노출
+    if (c.key === "patch" && c.adminOnly && !isAdmin) return false;
     if (hideMyTabs && c.myTab) return false;
     return true;
   });

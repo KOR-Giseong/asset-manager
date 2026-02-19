@@ -1,6 +1,8 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -73,10 +75,24 @@ function ReportModal({
   onConfirm,
   onClose,
 }: {
-  onConfirm: (reason: string) => void;
+  onConfirm: (reason: string, file?: File | null) => void;
   onClose: () => void;
 }) {
   const [reason, setReason] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] || null;
+    setFile(f);
+    if (f) {
+      const url = URL.createObjectURL(f);
+      setPreviewUrl(url);
+    } else {
+      setPreviewUrl(null);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-background rounded-xl border shadow-lg p-6 w-full max-w-sm space-y-4">
@@ -90,6 +106,27 @@ function ReportModal({
           placeholder="신고 사유 (스팸, 욕설, 허위정보 등)"
           rows={3}
         />
+        <div>
+          <label className="block text-xs font-medium mb-1">첨부 스크린샷 (선택)</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="block w-full text-xs"
+          />
+          {previewUrl && (
+            <div className="mt-2 rounded border max-h-32 mx-auto overflow-hidden flex justify-center">
+              <Image
+                src={previewUrl}
+                alt="미리보기"
+                width={256}
+                height={128}
+                style={{ objectFit: "contain", maxHeight: 128, width: "auto", height: "auto" }}
+                unoptimized
+              />
+            </div>
+          )}
+        </div>
         <div className="flex gap-2 justify-end">
           <Button variant="ghost" size="sm" onClick={onClose}>
             취소
@@ -98,7 +135,7 @@ function ReportModal({
             variant="destructive"
             size="sm"
             disabled={!reason.trim()}
-            onClick={() => onConfirm(reason.trim())}
+            onClick={() => onConfirm(reason.trim(), file)}
           >
             신고
           </Button>
@@ -113,7 +150,28 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
   currentUserId,
   isAdmin,
 }) => {
+  const { data: session, status, update } = useSession();
   const router = useRouter();
+
+  // 정지된 유저면 즉시 로그아웃 및 안내
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.suspended) {
+      alert("정지된 계정입니다. 관리자에게 문의하세요.");
+      signOut({ callbackUrl: "/suspended" });
+    }
+  }, [session, status]);
+
+  // 정지된 유저인데 아직 차단이 안된 경우(토큰 만료 전) 새로고침 안내 배너
+  const [showRefreshBanner, setShowRefreshBanner] = useState(false);
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.suspended === true) {
+      // 이미 차단된 경우는 제외(위 useEffect에서 signOut)
+      // 만약 미들웨어에서 차단이 안 됐다면(토큰 만료 전) 안내
+      setShowRefreshBanner(true);
+    } else {
+      setShowRefreshBanner(false);
+    }
+  }, [session, status]);
   const [commentText, setCommentText] = useState("");
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
@@ -163,13 +221,24 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
     router.refresh();
   };
 
-  const handleReport = async (reason: string) => {
+  const handleReport = async (reason: string, file?: File | null) => {
     if (!reportTarget) return;
+    let screenshotUrl: string | undefined = undefined;
     try {
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/report-upload", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.url) screenshotUrl = data.url;
+      }
       if (reportTarget.type === "post") {
-        await reportPost(reportTarget.id, reason);
+        await reportPost(reportTarget.id, reason, screenshotUrl);
       } else {
-        await reportComment(reportTarget.id, reason);
+        await reportComment(reportTarget.id, reason, screenshotUrl);
       }
       alert("신고가 접수되었습니다.");
     } catch (e: unknown) {
@@ -181,6 +250,11 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
 
   return (
     <div className="max-w-3xl mx-auto px-4 md:px-0 py-6 md:py-8 space-y-5 md:space-y-6">
+      {showRefreshBanner && (
+        <div className="mb-4 p-3 rounded bg-destructive/10 border border-destructive text-destructive text-sm text-center font-semibold">
+          계정이 정지되었습니다. <span className="underline cursor-pointer" onClick={() => update()}>새로고침</span> 후 이용해 주세요.
+        </div>
+      )}
       {/* 신고 모달 */}
       {reportTarget && (
         <ReportModal
@@ -424,6 +498,10 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
 
         {/* 댓글/답변 입력 */}
         <div className="rounded-xl border bg-card p-4 space-y-3 mt-2">
+          {/* 작성 가이드 안내문구 */}
+          <div className="mb-2 p-3 rounded bg-muted/50 text-xs text-muted-foreground">
+            ※ 작성 시 타인 비방, 욕설, 성희롱, 개인정보 노출, 불법 정보, 광고 등 금지. 위반 시 제재될 수 있습니다.
+          </div>
           <p className="text-xs font-medium text-muted-foreground">
             {isQuestion ? "답변 작성" : "댓글 작성"}
           </p>

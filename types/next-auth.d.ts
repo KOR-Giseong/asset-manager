@@ -8,6 +8,8 @@ declare module "next-auth" {
     isPrivacyMode?: boolean;
     language?: Language;
     allowNotifications?: boolean;
+    suspended?: boolean;
+    suspendedReason?: string | null;
   }
 
   interface Session {
@@ -16,6 +18,8 @@ declare module "next-auth" {
       email?: string | null;
       name?: string | null;
       image?: string | null;
+      suspended: boolean;
+      suspendedReason?: string | null;
     };
   }
 }
@@ -29,5 +33,7 @@ declare module "next-auth/jwt" {
     isPrivacyMode?: boolean;
     language?: Language;
     allowNotifications?: boolean;
+    suspended?: boolean;
+    suspendedReason?: string | null;
   }
 }
