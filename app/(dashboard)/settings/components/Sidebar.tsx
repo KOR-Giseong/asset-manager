@@ -17,8 +17,8 @@ interface SidebarProps {
 
 export const Sidebar: FC<SidebarProps> = ({ selected, onSelect }) => (
   <>
-    {/* 모바일: 상단 수평 스크롤 탭바 */}
-    <div className="md:hidden flex overflow-x-auto border-b bg-background shrink-0 px-2 gap-1 py-2 scrollbar-hide">
+    {/* 모바일: 상단 수평 스크롤 탭바 (sticky + 햄버거 여백) */}
+    <div className="md:hidden sticky top-0 z-30 flex overflow-x-auto border-b bg-background/95 backdrop-blur-sm shrink-0 pl-14 pr-2 gap-1 py-2 scrollbar-hide">
       {categories.map((cat) => {
         const Icon = cat.icon;
         const isSelected = selected === cat.key;

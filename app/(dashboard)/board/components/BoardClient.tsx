@@ -71,6 +71,7 @@ export const BoardClient: FC<BoardClientProps> = ({
   const [category, setCategory] = useState("free");
   const [searchQuery, setSearchQuery] = useState("");
   const [showEditor, setShowEditor] = useState(false);
+  const [expandedNoticeId, setExpandedNoticeId] = useState<string | null>(null);
   const [editing, setEditing] = useState<{
     id?: string;
     title?: string;
@@ -188,243 +189,271 @@ export const BoardClient: FC<BoardClientProps> = ({
   const isMyTab = category === "mine" || category === "mycomments";
 
   return (
-    <div className="max-w-3xl mx-auto px-4 md:px-0 py-6 md:py-8 space-y-4 md:space-y-5">
-      {/* 헤더 배너 */}
-      <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 px-4 md:px-6 py-4 md:py-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-base md:text-lg font-bold mb-1">게시판</h1>
-            <p className="text-xs md:text-sm text-muted-foreground">
-              모든 정보를 게시판을 통해 자유롭게 공유해보세요!
-              <br className="hidden sm:block" />
-              <span className="hidden sm:inline">질문, 정보 공유, 자산 관리 팁 등 무엇이든 환영합니다.</span>
-            </p>
+    <>
+      {/* ── Sticky 탭바 ── */}
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b">
+        <div className="max-w-3xl mx-auto">
+          {/* 모바일: pl-14로 햄버거 아이콘 여백 확보 / 데스크탑: px-0 */}
+          <div className="flex items-center gap-2 px-4 md:px-0 py-2 pl-14 md:pl-0">
+            <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
+              <BoardCategoryTabs
+                selected={category}
+                onSelect={(key) => {
+                  setCategory(key);
+                  setShowEditor(false);
+                  setEditing(null);
+                  setSearchQuery("");
+                  setExpandedNoticeId(null);
+                }}
+                isAdmin={isAdmin}
+              />
+            </div>
+            {isWritableCategory && (
+              <Button
+                size="sm"
+                variant={showEditor ? "ghost" : "default"}
+                className="shrink-0"
+                onClick={() => {
+                  setEditing(null);
+                  setShowEditor((v) => !v);
+                }}
+              >
+                {showEditor ? "취소" : "글쓰기"}
+              </Button>
+            )}
           </div>
-          <PenSquare size={28} className="text-primary/30 shrink-0 mt-0.5 hidden sm:block" />
         </div>
       </div>
 
-      {/* 탭 + 글쓰기 버튼 */}
-      <div className="flex items-center gap-2">
-        <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
-          <BoardCategoryTabs
-            selected={category}
-            onSelect={(key) => {
-              setCategory(key);
+      {/* ── 스크롤 콘텐츠 ── */}
+      <div className="max-w-3xl mx-auto px-4 md:px-0 py-4 md:py-6 space-y-4">
+        {/* 헤더 배너 */}
+        <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 px-4 md:px-6 py-4 md:py-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-base md:text-lg font-bold mb-1">게시판</h1>
+              <p className="text-xs md:text-sm text-muted-foreground">
+                모든 정보를 게시판을 통해 자유롭게 공유해보세요!
+                <br className="hidden sm:block" />
+                <span className="hidden sm:inline">질문, 정보 공유, 자산 관리 팁 등 무엇이든 환영합니다.</span>
+              </p>
+            </div>
+            <PenSquare size={28} className="text-primary/30 shrink-0 mt-0.5 hidden sm:block" />
+          </div>
+        </div>
+
+        {/* 에디터 */}
+        {showEditor && (
+          <BoardEditor
+            initial={editing ?? undefined}
+            isAdmin={isAdmin}
+            onSubmit={handleSubmit}
+            onCancel={() => {
               setShowEditor(false);
               setEditing(null);
-              setSearchQuery("");
             }}
-            isAdmin={isAdmin}
           />
-        </div>
-        {isWritableCategory && (
-          <Button
-            size="sm"
-            variant={showEditor ? "ghost" : "default"}
-            className="shrink-0"
-            onClick={() => {
-              setEditing(null);
-              setShowEditor((v) => !v);
-            }}
-          >
-            {showEditor ? "취소" : "글쓰기"}
-          </Button>
         )}
-      </div>
 
-      {/* 에디터 */}
-      {showEditor && (
-        <BoardEditor
-          initial={editing ?? undefined}
-          isAdmin={isAdmin}
-          onSubmit={handleSubmit}
-          onCancel={() => {
-            setShowEditor(false);
-            setEditing(null);
-          }}
-        />
-      )}
+        {/* 검색창 (내 탭 제외) */}
+        {!isMyTab && (
+          <div className="relative">
+            <Search
+              size={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="제목 또는 내용으로 검색"
+              className="pl-8 text-sm"
+            />
+          </div>
+        )}
 
-      {/* 검색창 (내 탭 제외) */}
-      {!isMyTab && (
-        <div className="relative">
-          <Search
-            size={15}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="제목 또는 내용으로 검색"
-            className="pl-8 text-sm"
-          />
-        </div>
-      )}
-
-      {/* 공지사항 / 패치노트 탭 */}
-      {(category === "notice" || category === "patch") && (
-        <div className="space-y-2">
-          {filteredNotices
-            .filter((n) =>
-              category === "notice" ? n.type === "NOTICE" : n.type === "PATCH"
-            )
-            .map((notice) => (
-              <div
-                key={notice.id}
-                className="border rounded-lg px-4 py-3 flex items-center justify-between"
-              >
-                <div>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-xs font-semibold text-primary">
-                      [{notice.type === "NOTICE" ? "공지" : "패치"}]
-                    </span>
-                    {notice.isPinned && (
-                      <Pin size={12} className="text-primary" />
-                    )}
-                    <span className="text-sm font-medium">{notice.title}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(notice.createdAt).toLocaleDateString("ko-KR")}
-                  </p>
-                </div>
-                {isAdmin && (
-                  <div className="flex gap-2 shrink-0 items-center">
-                    <button
-                      className={`text-xs transition-colors ${notice.isPinned ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-primary"}`}
-                      title={notice.isPinned ? "자유게시판 고정 해제" : "자유게시판 상단에 고정"}
-                      onClick={() => handleTogglePin(notice.id, notice.isPinned)}
+        {/* 공지사항 / 패치노트 탭 */}
+        {(category === "notice" || category === "patch") && (
+          <div className="space-y-2">
+            {filteredNotices
+              .filter((n) =>
+                category === "notice" ? n.type === "NOTICE" : n.type === "PATCH"
+              )
+              .map((notice) => {
+                const isExpanded = expandedNoticeId === notice.id;
+                return (
+                  <div key={notice.id} className="border rounded-lg overflow-hidden">
+                    {/* 헤더 행 */}
+                    <div
+                      className="px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-muted/40 transition-colors"
+                      onClick={() =>
+                        setExpandedNoticeId(isExpanded ? null : notice.id)
+                      }
                     >
-                      {notice.isPinned ? <PinOff size={14} /> : <Pin size={14} />}
-                    </button>
-                    <button
-                      className="text-xs text-primary hover:underline"
-                      onClick={() => handleEditNotice(notice.id)}
-                    >
-                      수정
-                    </button>
-                    <button
-                      className="text-xs text-destructive hover:underline"
-                      onClick={() => handleDeleteNotice(notice.id)}
-                    >
-                      삭제
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          {filteredNotices.filter((n) =>
-            category === "notice" ? n.type === "NOTICE" : n.type === "PATCH"
-          ).length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              {searchQuery ? "검색 결과가 없습니다." : "게시글이 없습니다."}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* 자유게시판 / 내 글 탭 */}
-      {(category === "free" || category === "mine") && (
-        <div className="space-y-3">
-          {/* 고정 공지 (자유게시판 탭에서만 표시) */}
-          {category === "free" && pinnedNotices.length > 0 && (
-            <div className="space-y-1.5">
-              {pinnedNotices.map((notice) => (
-                <div
-                  key={notice.id}
-                  className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 flex items-center gap-2"
-                >
-                  <Pin size={12} className="text-primary shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-primary">
-                        [{notice.type === "NOTICE" ? "공지" : "패치"}]
-                      </span>
-                      <span className="text-sm font-medium truncate">{notice.title}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-xs font-semibold text-primary shrink-0">
+                            [{notice.type === "NOTICE" ? "공지" : "패치"}]
+                          </span>
+                          {notice.isPinned && (
+                            <Pin size={12} className="text-primary shrink-0" />
+                          )}
+                          <span className="text-sm font-medium truncate">{notice.title}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {notice.authorNickname} · {new Date(notice.createdAt).toLocaleDateString("ko-KR")}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-2">
+                        {isAdmin && (
+                          <>
+                            <button
+                              className={`text-xs transition-colors ${notice.isPinned ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-primary"}`}
+                              title={notice.isPinned ? "자유게시판 고정 해제" : "자유게시판 상단에 고정"}
+                              onClick={(e) => { e.stopPropagation(); handleTogglePin(notice.id, notice.isPinned); }}
+                            >
+                              {notice.isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+                            </button>
+                            <button
+                              className="text-xs text-primary hover:underline"
+                              onClick={(e) => { e.stopPropagation(); handleEditNotice(notice.id); }}
+                            >
+                              수정
+                            </button>
+                            <button
+                              className="text-xs text-destructive hover:underline"
+                              onClick={(e) => { e.stopPropagation(); handleDeleteNotice(notice.id); }}
+                            >
+                              삭제
+                            </button>
+                          </>
+                        )}
+                        <span className="text-muted-foreground text-xs">
+                          {isExpanded ? "▲" : "▼"}
+                        </span>
+                      </div>
                     </div>
+                    {/* 펼쳐진 내용 */}
+                    {isExpanded && (
+                      <div className="px-4 py-3 border-t bg-muted/20">
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{notice.content}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            {filteredNotices.filter((n) =>
+              category === "notice" ? n.type === "NOTICE" : n.type === "PATCH"
+            ).length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                {searchQuery ? "검색 결과가 없습니다." : "게시글이 없습니다."}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* 자유게시판 / 내 글 탭 */}
+        {(category === "free" || category === "mine") && (
+          <div className="space-y-3">
+            {/* 고정 공지 (자유게시판 탭에서만 표시) */}
+            {category === "free" && pinnedNotices.length > 0 && (
+              <div className="space-y-1.5">
+                {pinnedNotices.map((notice) => (
+                  <div
+                    key={notice.id}
+                    className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 flex items-center gap-2"
+                  >
+                    <Pin size={12} className="text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-primary">
+                          [{notice.type === "NOTICE" ? "공지" : "패치"}]
+                        </span>
+                        <span className="text-sm font-medium truncate">{notice.title}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {new Date(notice.createdAt).toLocaleDateString("ko-KR")}
+                      </p>
+                    </div>
+                    {isAdmin && (
+                      <button
+                        className="text-xs text-primary hover:text-primary/70 shrink-0"
+                        title="고정 해제"
+                        onClick={() => handleTogglePin(notice.id, notice.isPinned)}
+                      >
+                        <PinOff size={13} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <div className="border-b" />
+              </div>
+            )}
+
+            {category === "free" && (
+              <BoardStickyNotice
+                notices={notices}
+                isAdmin={isAdmin}
+                onEdit={handleEditNotice}
+                onDelete={handleDeleteNotice}
+              />
+            )}
+            {filteredPosts.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                {searchQuery
+                  ? "검색 결과가 없습니다."
+                  : category === "mine"
+                  ? "작성한 글이 없습니다."
+                  : "아직 게시글이 없습니다. 첫 글을 남겨보세요!"}
+              </p>
+            ) : (
+              <BoardList
+                posts={filteredPosts}
+                isAdmin={isAdmin}
+                userId={userId}
+                onEdit={handleEditPost}
+                onDelete={handleDeletePost}
+              />
+            )}
+          </div>
+        )}
+
+        {/* 내 댓글 탭 */}
+        {category === "mycomments" && (
+          <div className="space-y-2">
+            {myComments.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
+                작성한 댓글이 없습니다.
+              </p>
+            ) : (
+              myComments.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/board/${c.postId}`}
+                  className="flex items-start justify-between rounded-lg border px-4 py-3 hover:bg-muted/40 transition-colors group"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-primary font-medium mb-1 flex items-center gap-1 truncate">
+                      <MessageSquare size={11} />
+                      {c.postTitle}
+                    </p>
+                    <p className="text-sm text-foreground truncate">
+                      {c.isAnonymous ? "(익명) " : ""}
+                      {c.content}
+                    </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {new Date(notice.createdAt).toLocaleDateString("ko-KR")}
+                      {new Date(c.createdAt).toLocaleDateString("ko-KR")}
                     </p>
                   </div>
-                  {isAdmin && (
-                    <button
-                      className="text-xs text-primary hover:text-primary/70 shrink-0"
-                      title="고정 해제"
-                      onClick={() => handleTogglePin(notice.id, notice.isPinned)}
-                    >
-                      <PinOff size={13} />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <div className="border-b" />
-            </div>
-          )}
-
-          {category === "free" && (
-            <BoardStickyNotice
-              notices={notices}
-              isAdmin={isAdmin}
-              onEdit={handleEditNotice}
-              onDelete={handleDeleteNotice}
-            />
-          )}
-          {filteredPosts.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              {searchQuery
-                ? "검색 결과가 없습니다."
-                : category === "mine"
-                ? "작성한 글이 없습니다."
-                : "아직 게시글이 없습니다. 첫 글을 남겨보세요!"}
-            </p>
-          ) : (
-            <BoardList
-              posts={filteredPosts}
-              isAdmin={isAdmin}
-              userId={userId}
-              onEdit={handleEditPost}
-              onDelete={handleDeletePost}
-            />
-          )}
-        </div>
-      )}
-
-      {/* 내 댓글 탭 */}
-      {category === "mycomments" && (
-        <div className="space-y-2">
-          {myComments.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              작성한 댓글이 없습니다.
-            </p>
-          ) : (
-            myComments.map((c) => (
-              <Link
-                key={c.id}
-                href={`/board/${c.postId}`}
-                className="flex items-start justify-between rounded-lg border px-4 py-3 hover:bg-muted/40 transition-colors group"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-primary font-medium mb-1 flex items-center gap-1 truncate">
-                    <MessageSquare size={11} />
-                    {c.postTitle}
-                  </p>
-                  <p className="text-sm text-foreground truncate">
-                    {c.isAnonymous ? "(익명) " : ""}
-                    {c.content}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {new Date(c.createdAt).toLocaleDateString("ko-KR")}
-                  </p>
-                </div>
-                <ExternalLink
-                  size={13}
-                  className="shrink-0 mt-1 ml-3 text-muted-foreground group-hover:text-foreground transition-colors"
-                />
-              </Link>
-            ))
-          )}
-        </div>
-      )}
-    </div>
+                  <ExternalLink
+                    size={13}
+                    className="shrink-0 mt-1 ml-3 text-muted-foreground group-hover:text-foreground transition-colors"
+                  />
+                </Link>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    </>
   );
 };
