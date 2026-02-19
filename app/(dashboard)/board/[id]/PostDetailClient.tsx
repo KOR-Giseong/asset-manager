@@ -68,6 +68,7 @@ const TAG_BADGE: Record<PostTag, { label: string; cls: string }> = {
   FREE: { label: "자유글", cls: "bg-muted text-muted-foreground" },
   INFO: { label: "정보공유", cls: "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400" },
   QUESTION: { label: "질문", cls: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400" },
+  SUGGESTION: { label: "건의", cls: "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400" },
 };
 
 // 신고 모달
