@@ -9,11 +9,8 @@ export async function getAdminReports() {
     orderBy: { createdAt: "desc" },
     include: {
       reporter: { select: { id: true, nickname: true } },
-      post: { select: { id: true, title: true } },
-      comment: { select: { id: true, content: true } },
-      // 신고 대상 유저: 게시글/댓글 작성자
-      post: { select: { author: { select: { id: true, nickname: true, suspended: true } } } },
-      comment: { select: { author: { select: { id: true, nickname: true, suspended: true } } } },
+      post: { select: { id: true, title: true, author: { select: { id: true, nickname: true, suspended: true } } } },
+      comment: { select: { id: true, content: true, author: { select: { id: true, nickname: true, suspended: true } } } },
     },
   });
   // 신고 대상 유저 추출
