@@ -17,7 +17,7 @@ export async function getAdminReports() {
   return reports.map((r) => ({
     id: r.id,
     reason: r.reason,
-    createdAt: r.createdAt,
+    createdAt: r.createdAt.toISOString(),
     status: r.status,
     reporter: r.reporter,
     post: r.post ? { id: r.post.id, title: r.post.title } : undefined,
