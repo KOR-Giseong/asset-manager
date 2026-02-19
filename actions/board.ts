@@ -14,6 +14,7 @@ import {
   reportPostService,
   reportCommentService,
   pinNoticeService,
+  toggleLikeService,
 } from "@/services/boardService";
 
 export async function writePost(data: {
@@ -102,4 +103,12 @@ export async function reportPost(postId: string, reason: string, screenshotUrl?:
 export async function reportComment(commentId: string, reason: string, screenshotUrl?: string) {
   const user = await getCurrentUser();
   await reportCommentService({ reporterId: user.id, commentId, reason, screenshotUrl });
+}
+
+export async function toggleLike(postId: string) {
+  const user = await getCurrentUser();
+  const result = await toggleLikeService(postId, user);
+  revalidatePath("/board");
+  revalidatePath(`/board/${postId}`);
+  return result;
 }

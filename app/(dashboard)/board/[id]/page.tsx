@@ -1,15 +1,18 @@
 import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getBoardDetailServer } from "@/services/boardService";
+import { getBoardDetailServer, getUserLikedPostIdsService } from "@/services/boardService";
 import { PostDetailClient } from "./PostDetailClient";
 
 export default async function PostDetailPage({ params }: { params: { id: string } }) {
-  const [user, post] = await Promise.all([
-    getCurrentUser(),
+  const user = await getCurrentUser();
+  const [post, likedPostIds] = await Promise.all([
     getBoardDetailServer(params.id),
+    getUserLikedPostIdsService(user.id),
   ]);
 
   if (!post) notFound();
+
+  const isLiked = likedPostIds.includes(params.id);
 
   // Date → string 직렬화 (Server → Client 전달용)
   const serializedPost = {
@@ -35,6 +38,8 @@ export default async function PostDetailPage({ params }: { params: { id: string 
       post={serializedPost}
       currentUserId={user.id}
       isAdmin={user.role === "ADMIN"}
+      isLiked={isLiked}
+      likeCount={post.likeCount}
     />
   );
 }

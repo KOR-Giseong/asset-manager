@@ -1,7 +1,7 @@
 "use client";
 import { FC } from "react";
 import Link from "next/link";
-import { MessageSquare, UserRound } from "lucide-react";
+import { MessageSquare, UserRound, Heart } from "lucide-react";
 import { PostTag, POST_TAG_LABELS } from "@/types/board";
 import { cn } from "@/lib/utils";
 
@@ -24,14 +24,17 @@ interface BoardItemProps {
     isAnonymous?: boolean;
     commentCount?: number;
     tag?: PostTag;
+    likeCount?: number;
+    isLikedByMe?: boolean;
   };
   isAdmin?: boolean;
   userId?: string;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onToggleLike?: (id: string) => void;
 }
 
-export const BoardItem: FC<BoardItemProps> = ({ post, isAdmin, userId, onEdit, onDelete }) => {
+export const BoardItem: FC<BoardItemProps> = ({ post, isAdmin, userId, onEdit, onDelete, onToggleLike }) => {
   const canModify = isAdmin || post.isMine || post.authorId === userId;
   const displayName =
     post.isAnonymous
@@ -44,7 +47,7 @@ export const BoardItem: FC<BoardItemProps> = ({ post, isAdmin, userId, onEdit, o
 
   return (
     <div className="border rounded-lg px-4 py-3 flex items-center justify-between hover:bg-muted/40 transition-colors group">
-      <Link href={`/board/${post.id}`} className="flex-1 min-w-0 mr-4 space-y-0.5">
+      <Link href={`/board/${post.id}`} className="flex-1 min-w-0 mr-3 space-y-0.5">
         <div className="flex items-center gap-2 flex-wrap">
           {tag !== "FREE" && (
             <span
@@ -74,28 +77,48 @@ export const BoardItem: FC<BoardItemProps> = ({ post, isAdmin, userId, onEdit, o
         </div>
       </Link>
 
-      {canModify && (
-        <div className="flex gap-2 shrink-0">
-          <button
-            className="text-xs text-primary hover:underline"
-            onClick={(e) => {
-              e.preventDefault();
-              onEdit?.(post.id);
-            }}
-          >
-            수정
-          </button>
-          <button
-            className="text-xs text-destructive hover:underline"
-            onClick={(e) => {
-              e.preventDefault();
-              onDelete?.(post.id);
-            }}
-          >
-            삭제
-          </button>
-        </div>
-      )}
+      <div className="flex items-center gap-1 shrink-0">
+        {/* 좋아요 버튼 */}
+        <button
+          className={cn(
+            "flex items-center gap-0.5 text-xs px-2 py-1.5 rounded transition-colors",
+            post.isLikedByMe
+              ? "text-rose-500"
+              : "text-muted-foreground hover:text-rose-400"
+          )}
+          onClick={(e) => {
+            e.preventDefault();
+            onToggleLike?.(post.id);
+          }}
+        >
+          <Heart size={12} fill={post.isLikedByMe ? "currentColor" : "none"} />
+          <span>{post.likeCount ?? 0}</span>
+        </button>
+
+        {/* 수정/삭제 */}
+        {canModify && (
+          <>
+            <button
+              className="text-xs text-primary hover:underline px-2 py-1.5 rounded"
+              onClick={(e) => {
+                e.preventDefault();
+                onEdit?.(post.id);
+              }}
+            >
+              수정
+            </button>
+            <button
+              className="text-xs text-destructive hover:underline px-2 py-1.5 rounded"
+              onClick={(e) => {
+                e.preventDefault();
+                onDelete?.(post.id);
+              }}
+            >
+              삭제
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 };

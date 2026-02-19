@@ -1,13 +1,19 @@
 import { getCurrentUser } from "@/lib/auth";
 import { getBoardData } from "@/repositories/board-repository";
-import { getMyCommentsService } from "@/services/boardService";
+import {
+  getMyCommentsService,
+  getUserLikedPostIdsService,
+  getHotPostsService,
+} from "@/services/boardService";
 import { BoardClient } from "./components/BoardClient";
 
 export default async function BoardPage() {
   const user = await getCurrentUser();
-  const [{ notices, posts }, myComments] = await Promise.all([
+  const [{ notices, posts }, myComments, likedPostIds, hotPosts] = await Promise.all([
     getBoardData(),
     getMyCommentsService(user.id),
+    getUserLikedPostIdsService(user.id),
+    getHotPostsService(),
   ]);
 
   const serializedNotices = notices.map((n) => ({
@@ -32,6 +38,8 @@ export default async function BoardPage() {
     isMine: p.authorId === user.id,
     isAnonymous: p.isAnonymous,
     commentCount: p._count.comments,
+    likeCount: p.likeCount,
+    isLikedByMe: likedPostIds.includes(p.id),
   }));
 
   const serializedMyComments = myComments.map((c) => ({
@@ -43,11 +51,19 @@ export default async function BoardPage() {
     isAnonymous: c.isAnonymous,
   }));
 
+  const serializedHotPosts = hotPosts.map((p) => ({
+    id: p.id,
+    title: p.title,
+    isAnonymous: p.isAnonymous,
+    recentLikeCount: p.recentLikeCount,
+  }));
+
   return (
     <BoardClient
       notices={serializedNotices}
       posts={serializedPosts}
       myComments={serializedMyComments}
+      hotPosts={serializedHotPosts}
       isAdmin={user.role === "ADMIN"}
       userId={user.id}
     />

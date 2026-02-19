@@ -22,9 +22,10 @@ interface BoardListProps {
   userId?: string;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onToggleLike?: (id: string) => void;
 }
 
-export const BoardList: FC<BoardListProps> = ({ posts, isAdmin, userId, onEdit, onDelete }) => (
+export const BoardList: FC<BoardListProps> = ({ posts, isAdmin, userId, onEdit, onDelete, onToggleLike }) => (
   <div className="space-y-2">
     {posts.map((post) => (
       <BoardItem
@@ -34,6 +35,7 @@ export const BoardList: FC<BoardListProps> = ({ posts, isAdmin, userId, onEdit, 
         userId={userId}
         onEdit={onEdit}
         onDelete={onDelete}
+        onToggleLike={onToggleLike}
       />
     ))}
   </div>

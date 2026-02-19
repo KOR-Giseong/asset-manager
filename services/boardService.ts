@@ -9,6 +9,10 @@ import {
   getMyComments,
   createPostRepo,
   updateNoticePinned,
+  addLike,
+  removeLike,
+  getUserLikedPostIds,
+  getHotPostsRepo,
 } from "@/repositories/board-repository";
 
 export async function createPost(data: {
@@ -139,4 +143,32 @@ export async function reportCommentService({
   });
   if (existing) throw new Error("이미 신고한 댓글입니다.");
   return createReport({ reporterId, commentId, reason, screenshotUrl });
+}
+
+export async function toggleLikeService(postId: string, user: User): Promise<{ liked: boolean }> {
+  const existing = await prisma.like.findUnique({
+    where: { userId_postId: { userId: user.id, postId } },
+  });
+
+  if (existing) {
+    await Promise.all([
+      removeLike(user.id, postId),
+      prisma.post.update({ where: { id: postId }, data: { likeCount: { decrement: 1 } } }),
+    ]);
+    return { liked: false };
+  } else {
+    await Promise.all([
+      addLike(user.id, postId),
+      prisma.post.update({ where: { id: postId }, data: { likeCount: { increment: 1 } } }),
+    ]);
+    return { liked: true };
+  }
+}
+
+export async function getUserLikedPostIdsService(userId: string) {
+  return getUserLikedPostIds(userId);
+}
+
+export async function getHotPostsService() {
+  return getHotPostsRepo();
 }

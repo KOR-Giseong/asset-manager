@@ -14,11 +14,14 @@ import {
   editNotice,
   removeNotice,
   togglePinNotice,
+  toggleLike,
 } from "@/actions/board";
 import type { NoticeType, PostTag } from "@/types/board";
+import { POST_TAG_LABELS } from "@/types/board";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PenSquare, Search, MessageSquare, ExternalLink, Pin, PinOff } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { PenSquare, Search, MessageSquare, ExternalLink, Pin, PinOff, TrendingUp, Flame, Heart } from "lucide-react";
 
 interface SerializedPost {
   id: string;
@@ -31,6 +34,15 @@ interface SerializedPost {
   isAnonymous?: boolean;
   commentCount?: number;
   tag?: PostTag;
+  likeCount?: number;
+  isLikedByMe?: boolean;
+}
+
+interface SerializedHotPost {
+  id: string;
+  title: string;
+  isAnonymous: boolean;
+  recentLikeCount: number;
 }
 
 interface SerializedNotice {
@@ -57,6 +69,7 @@ interface BoardClientProps {
   notices: SerializedNotice[];
   posts: SerializedPost[];
   myComments: SerializedMyComment[];
+  hotPosts: SerializedHotPost[];
   isAdmin: boolean;
   userId: string;
 }
@@ -65,11 +78,13 @@ export const BoardClient: FC<BoardClientProps> = ({
   notices,
   posts,
   myComments,
+  hotPosts,
   isAdmin,
   userId,
 }) => {
   const [category, setCategory] = useState("free");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTag, setSelectedTag] = useState<PostTag | "ALL">("ALL");
   const [showEditor, setShowEditor] = useState(false);
   const [expandedNoticeId, setExpandedNoticeId] = useState<string | null>(null);
   const [editing, setEditing] = useState<{
@@ -86,14 +101,15 @@ export const BoardClient: FC<BoardClientProps> = ({
 
   const filteredPosts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    const base = category === "mine" ? posts.filter((p) => p.isMine) : posts;
+    let base = category === "mine" ? posts.filter((p) => p.isMine) : posts;
+    if (selectedTag !== "ALL") base = base.filter((p) => (p.tag ?? "FREE") === selectedTag);
     if (!q) return base;
     return base.filter(
       (p) =>
         p.title.toLowerCase().includes(q) ||
         p.content.toLowerCase().includes(q)
     );
-  }, [posts, category, searchQuery]);
+  }, [posts, category, searchQuery, selectedTag]);
 
   const filteredNotices = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -183,6 +199,10 @@ export const BoardClient: FC<BoardClientProps> = ({
     await togglePinNotice(id, !current);
   };
 
+  const handleToggleLike = async (id: string) => {
+    await toggleLike(id);
+  };
+
   const isWritableCategory =
     category === "free" ||
     (isAdmin && (category === "notice" || category === "patch"));
@@ -203,6 +223,7 @@ export const BoardClient: FC<BoardClientProps> = ({
                   setShowEditor(false);
                   setEditing(null);
                   setSearchQuery("");
+                  setSelectedTag("ALL");
                   setExpandedNoticeId(null);
                 }}
                 isAdmin={isAdmin}
@@ -270,6 +291,50 @@ export const BoardClient: FC<BoardClientProps> = ({
             />
           </div>
         )}
+
+        {/* 태그 필터 칩 (자유 / 내 글 탭에서만) */}
+        {(category === "free" || category === "mine") && (() => {
+          const base = category === "mine" ? posts.filter((p) => p.isMine) : posts;
+          const TAG_FILTERS: { key: PostTag | "ALL"; label: string }[] = [
+            { key: "ALL",        label: "전체" },
+            { key: "FREE",       label: POST_TAG_LABELS.FREE },
+            { key: "INFO",       label: POST_TAG_LABELS.INFO },
+            { key: "QUESTION",   label: POST_TAG_LABELS.QUESTION },
+            { key: "SUGGESTION", label: POST_TAG_LABELS.SUGGESTION },
+          ];
+          const CHIP_SELECTED: Record<string, string> = {
+            ALL:        "bg-foreground text-background border-foreground",
+            FREE:       "bg-muted text-foreground border-border font-semibold",
+            INFO:       "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700",
+            QUESTION:   "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700",
+            SUGGESTION: "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700",
+          };
+          return (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {TAG_FILTERS.map(({ key, label }) => {
+                const count = key === "ALL"
+                  ? base.length
+                  : base.filter((p) => (p.tag ?? "FREE") === key).length;
+                const isSelected = selectedTag === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setSelectedTag(key)}
+                    className={cn(
+                      "border rounded-full px-2.5 py-0.5 text-xs transition-colors",
+                      isSelected
+                        ? CHIP_SELECTED[key]
+                        : "border-border text-muted-foreground hover:border-foreground/40 bg-background"
+                    )}
+                  >
+                    {label}
+                    <span className="ml-1 opacity-50">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {/* 공지사항 / 패치노트 탭 */}
         {(category === "notice" || category === "patch") && (
@@ -354,6 +419,32 @@ export const BoardClient: FC<BoardClientProps> = ({
         {/* 자유게시판 / 내 글 탭 */}
         {(category === "free" || category === "mine") && (
           <div className="space-y-3">
+            {/* 인기 게시글 섹션 (자유게시판 탭에서만) */}
+            {category === "free" && hotPosts.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold text-orange-500 dark:text-orange-400 flex items-center gap-1.5 px-0.5">
+                  <TrendingUp size={12} />
+                  인기 게시글
+                  <span className="opacity-50 font-normal">24시간</span>
+                </p>
+                {hotPosts.map((post) => (
+                  <Link
+                    key={post.id}
+                    href={`/board/${post.id}`}
+                    className="flex items-center gap-2 rounded-lg border border-orange-200/70 bg-orange-50/40 dark:border-orange-800/40 dark:bg-orange-950/20 px-4 py-2.5 hover:bg-orange-50/70 dark:hover:bg-orange-950/30 transition-colors"
+                  >
+                    <Flame size={12} className="text-orange-500 dark:text-orange-400 shrink-0" />
+                    <span className="flex-1 text-sm font-medium truncate">{post.title}</span>
+                    <span className="flex items-center gap-1 text-xs text-orange-500 dark:text-orange-400 shrink-0">
+                      <Heart size={11} />
+                      {post.recentLikeCount}
+                    </span>
+                  </Link>
+                ))}
+                <div className="border-b" />
+              </div>
+            )}
+
             {/* 고정 공지 (자유게시판 탭에서만 표시) */}
             {category === "free" && pinnedNotices.length > 0 && (
               <div className="space-y-1.5">
@@ -412,6 +503,7 @@ export const BoardClient: FC<BoardClientProps> = ({
                 userId={userId}
                 onEdit={handleEditPost}
                 onDelete={handleDeletePost}
+                onToggleLike={handleToggleLike}
               />
             )}
           </div>

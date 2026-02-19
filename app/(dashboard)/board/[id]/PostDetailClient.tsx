@@ -6,14 +6,15 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, MessageSquare, CornerDownRight, Flag, Trash2, HelpCircle } from "lucide-react";
-import { addComment, removeComment, reportPost, reportComment } from "@/actions/board";
+import { ArrowLeft, MessageSquare, CornerDownRight, Flag, Trash2, HelpCircle, Heart } from "lucide-react";
+import { addComment, removeComment, reportPost, reportComment, toggleLike } from "@/actions/board";
 import { PostTag } from "@/types/board";
 import { cn } from "@/lib/utils";
 
 interface Author {
   id: string;
   nickname: string;
+  role?: string;
 }
 
 interface SerializedReply {
@@ -51,6 +52,8 @@ interface PostDetailClientProps {
   post: SerializedPost;
   currentUserId: string;
   isAdmin: boolean;
+  isLiked: boolean;
+  likeCount: number;
 }
 
 // 이름 표시 헬퍼
@@ -150,6 +153,8 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
   post,
   currentUserId,
   isAdmin,
+  isLiked,
+  likeCount,
 }) => {
   const { data: session, status, update } = useSession();
   const router = useRouter();
@@ -173,6 +178,18 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
       setShowRefreshBanner(false);
     }
   }, [session, status]);
+
+  // 좋아요 낙관적 업데이트 상태
+  const [liked, setLiked] = useState(isLiked);
+  const [likeCountState, setLikeCountState] = useState(likeCount);
+
+  const handleLike = async () => {
+    const next = !liked;
+    setLiked(next);
+    setLikeCountState((c) => c + (next ? 1 : -1));
+    await toggleLike(post.id);
+  };
+
   const [commentText, setCommentText] = useState("");
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
@@ -314,6 +331,21 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
         <div className="border-t pt-4 text-sm leading-relaxed whitespace-pre-wrap">
           {post.content}
         </div>
+        {/* 좋아요 버튼 */}
+        <div className="border-t pt-3 flex items-center justify-center">
+          <button
+            onClick={handleLike}
+            className={cn(
+              "flex items-center gap-1.5 text-sm px-5 py-2 rounded-full border transition-colors",
+              liked
+                ? "border-rose-300 text-rose-500 bg-rose-50 dark:bg-rose-950/20 dark:border-rose-800"
+                : "border-border text-muted-foreground hover:border-rose-300 hover:text-rose-400"
+            )}
+          >
+            <Heart size={15} fill={liked ? "currentColor" : "none"} />
+            {likeCountState}
+          </button>
+        </div>
       </div>
 
       {/* 댓글/답변 섹션 */}
@@ -340,13 +372,23 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
             comment.isAnonymous,
             currentUserId
           );
+          const isAdminComment = !comment.isAnonymous && comment.author.role === "ADMIN";
 
           return (
             <div key={comment.id} className="space-y-2">
               {/* 댓글/답변 */}
-              <div className={cn("rounded-lg border bg-card p-4", isQuestion && "border-amber-200/60 dark:border-amber-800/40")}>
+              <div className={cn(
+                "rounded-lg border bg-card p-4",
+                isQuestion && "border-amber-200/60 dark:border-amber-800/40",
+                isAdminComment && "border-blue-300/70 dark:border-blue-700/50 bg-blue-50/40 dark:bg-blue-950/20"
+              )}>
                 <div className="flex items-center gap-1.5 text-xs mb-2">
                   <span className="font-medium">{name}</span>
+                  {isAdminComment && (
+                    <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-1.5 py-0.5 rounded">
+                      관리자
+                    </span>
+                  )}
                   <span className="text-muted-foreground">·</span>
                   <span className="text-muted-foreground">
                     {new Date(comment.createdAt).toLocaleDateString("ko-KR")}
@@ -397,10 +439,14 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
                       reply.isAnonymous,
                       currentUserId
                     );
+                    const isAdminReply = !reply.isAnonymous && reply.author.role === "ADMIN";
                     return (
                       <div
                         key={reply.id}
-                        className="rounded-lg border bg-muted/30 p-4 flex gap-3"
+                        className={cn(
+                          "rounded-lg border bg-muted/30 p-4 flex gap-3",
+                          isAdminReply && "border-blue-300/70 dark:border-blue-700/50 bg-blue-50/40 dark:bg-blue-950/20"
+                        )}
                       >
                         <CornerDownRight
                           size={13}
@@ -409,6 +455,11 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 text-xs mb-1">
                             <span className="font-medium">{replyName}</span>
+                            {isAdminReply && (
+                              <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-1.5 py-0.5 rounded">
+                                관리자
+                              </span>
+                            )}
                             <span className="text-muted-foreground">·</span>
                             <span className="text-muted-foreground">
                               {new Date(reply.createdAt).toLocaleDateString(
