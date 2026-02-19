@@ -14,7 +14,7 @@ interface Report {
   status: string;
   reason: string;
   createdAt: string;
-  screenshotUrl?: string;
+  screenshotUrl?: string | null;
   reporter?: { nickname: string };
   reportedUser?: { nickname: string };
   post?: { title: string };
