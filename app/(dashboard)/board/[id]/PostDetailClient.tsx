@@ -282,15 +282,17 @@ export const PostDetailClient: FC<PostDetailClientProps> = ({
       )}
 
       {/* 뒤로가기 */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => router.push("/board")}
-        className="gap-1.5 -ml-2 text-muted-foreground"
-      >
-        <ArrowLeft size={14} />
-        목록으로
-      </Button>
+      <div className="flex justify-end">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push("/board")}
+          className="gap-1.5 text-muted-foreground"
+        >
+          <ArrowLeft size={14} />
+          목록으로
+        </Button>
+      </div>
 
       {/* 게시글 */}
       <div className="rounded-xl border bg-card p-6 space-y-4">

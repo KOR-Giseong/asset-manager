@@ -45,6 +45,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: createAdapter(),
   callbacks: {
     ...authConfig.callbacks,
+
+    // 로그인 시 탈퇴 유예 상태 처리
+    async signIn({ user }) {
+      if (!user.email) return true;
+      const dbUser = await prisma.user.findUnique({
+        where: { email: user.email },
+        select: { id: true, deletedAt: true },
+      });
+      if (!dbUser?.deletedAt) return true;
+
+      const elapsed = Date.now() - dbUser.deletedAt.getTime();
+      const GRACE_MS = 24 * 60 * 60 * 1000;
+
+      if (elapsed < GRACE_MS) {
+        // 24시간 내 재로그인 → 탈퇴 자동 취소
+        await prisma.user.update({
+          where: { id: dbUser.id },
+          data: { deletedAt: null, reactivatedAt: new Date() },
+        });
+        return true;
+      } else {
+        // 24시간 경과 → 완전 삭제 후 신규 가입 가능
+        await prisma.user.delete({ where: { id: dbUser.id } });
+        return "/login?reason=account_expired";
+      }
+    },
+
     async jwt({ token, user, trigger }) {
       // 최초 로그인 시 커스텀 필드 로드
       if (user) {

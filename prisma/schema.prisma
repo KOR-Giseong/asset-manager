@@ -23,6 +23,8 @@ model User {
   suspended         Boolean         @default(false) // 계정 정지 여부
   suspendedReason   String?         // 계정 정지 사유 (선택)
   suspendedAppeal   String?         // 해제 신청 사유 (선택)
+  deletedAt         DateTime?       // 탈퇴 신청 시각 (24시간 유예)
+  reactivatedAt     DateTime?       // 재활성화 시각 (토스트 표시용)
   accounts          Account[]
   sessions          Session[]
   assets            Asset[]

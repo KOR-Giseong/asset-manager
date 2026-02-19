@@ -3,6 +3,7 @@
 import { FC, useState } from "react";
 import { usePrivacyMode } from "@/components/privacy-mode-context";
 import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { AccountSettings } from "./AccountSettings";
 import { PersonalizeSettings } from "./PersonalizeSettings";
@@ -12,7 +13,8 @@ import { DangerZoneModal } from "./DangerZoneModal";
 import {
   changeNickname,
   updateSettings,
-  deleteAccount,
+  requestDeleteAccount,
+  cancelDeleteAccount,
   resetAllData,
   exportCSV,
 } from "@/actions/settings";
@@ -20,10 +22,12 @@ import type { User } from "@/types/user";
 
 interface SettingsClientProps {
   user: User;
+  deletedAt?: string | null;
 }
 
-export const SettingsClient: FC<SettingsClientProps> = ({ user }) => {
+export const SettingsClient: FC<SettingsClientProps> = ({ user, deletedAt }) => {
   const { update: updateSession } = useSession();
+  const router = useRouter();
   const [category, setCategory] = useState("account");
   const [dangerModal, setDangerModal] = useState<{
     open: boolean;
@@ -47,10 +51,16 @@ export const SettingsClient: FC<SettingsClientProps> = ({ user }) => {
     if (dangerModal.type === "reset") {
       await resetAllData();
     } else {
-      await deleteAccount();
-      signOut({ callbackUrl: "/login" });
+      // 즉시 삭제 대신 24시간 유예 신청 (signOut 없음)
+      await requestDeleteAccount();
+      router.refresh();
     }
     setDangerModal({ open: false, type: "reset" });
+  };
+
+  const handleCancelDelete = async () => {
+    await cancelDeleteAccount();
+    router.refresh();
   };
 
   const renderContent = () => {
@@ -59,12 +69,14 @@ export const SettingsClient: FC<SettingsClientProps> = ({ user }) => {
         return (
           <AccountSettings
             nickname={user.nickname}
+            deletedAt={deletedAt}
             onNicknameChange={async (nickname) => {
               await changeNickname(nickname);
               await updateSession();
             }}
             onLogout={() => signOut({ callbackUrl: "/login" })}
             onDelete={() => setDangerModal({ open: true, type: "delete" })}
+            onCancelDelete={handleCancelDelete}
           />
         );
       case "personalize":

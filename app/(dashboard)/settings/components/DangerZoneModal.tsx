@@ -34,9 +34,15 @@ export const DangerZoneModal: FC<DangerZoneModalProps> = ({ open, onClose, onCon
           </div>
         </DialogHeader>
         <div className="rounded-lg bg-destructive/5 border border-destructive/20 px-4 py-3 text-sm text-muted-foreground">
-          {isDelete
-            ? "계정 및 모든 데이터가 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
-            : "모든 자산, 거래 이력, 설정 데이터가 초기화됩니다. 이 작업은 되돌릴 수 없습니다."}
+          {isDelete ? (
+            <ul className="space-y-1.5">
+              <li>• 탈퇴 신청 후 <strong className="text-foreground">24시간 동안</strong> 계정 및 데이터가 보관됩니다.</li>
+              <li>• 24시간 이내 <strong className="text-foreground">재로그인 시</strong> 탈퇴가 자동으로 취소됩니다.</li>
+              <li>• 24시간 경과 후에는 계정 및 모든 데이터가 영구 삭제됩니다.</li>
+            </ul>
+          ) : (
+            "모든 자산, 거래 이력, 설정 데이터가 초기화됩니다. 이 작업은 되돌릴 수 없습니다."
+          )}
         </div>
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={onClose}>

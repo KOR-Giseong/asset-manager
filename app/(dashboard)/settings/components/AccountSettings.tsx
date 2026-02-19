@@ -3,23 +3,28 @@ import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { CheckCircle2, LogOut, Trash2 } from "lucide-react";
+import { CheckCircle2, LogOut, Trash2, Clock, X } from "lucide-react";
 
 interface AccountSettingsProps {
   nickname: string;
+  deletedAt?: string | null;
   onNicknameChange: (nickname: string) => Promise<void>;
   onLogout: () => void;
   onDelete: () => void;
+  onCancelDelete?: () => Promise<void>;
 }
 
 export const AccountSettings: FC<AccountSettingsProps> = ({
   nickname,
+  deletedAt,
   onNicknameChange,
   onLogout,
   onDelete,
+  onCancelDelete,
 }) => {
   const { register, handleSubmit, formState } = useForm({ defaultValues: { nickname } });
   const [checking, setChecking] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -38,6 +43,21 @@ export const AccountSettings: FC<AccountSettingsProps> = ({
       setChecking(false);
     }
   };
+
+  const handleCancelDelete = async () => {
+    if (!onCancelDelete) return;
+    setCancelling(true);
+    try {
+      await onCancelDelete();
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  // 탈퇴 신청 시각 + 24시간 = 삭제 예정 시각
+  const deleteScheduledAt = deletedAt
+    ? new Date(new Date(deletedAt).getTime() + 24 * 60 * 60 * 1000)
+    : null;
 
   return (
     <div className="space-y-6 md:space-y-8 w-full max-w-lg">
@@ -80,16 +100,51 @@ export const AccountSettings: FC<AccountSettingsProps> = ({
               로그아웃
             </Button>
           </div>
-          <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
-            <div>
-              <p className="text-sm font-medium text-destructive">서비스 탈퇴</p>
-              <p className="text-xs text-muted-foreground">계정 및 모든 데이터가 삭제됩니다.</p>
+
+          {/* 탈퇴 예정 상태 */}
+          {deletedAt && deleteScheduledAt ? (
+            <div className="rounded-lg border border-amber-300/60 bg-amber-50/60 dark:border-amber-700/40 dark:bg-amber-950/20 px-4 py-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-2 min-w-0">
+                  <Clock size={15} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-300">탈퇴 신청 중</p>
+                    <p className="text-xs text-amber-700/80 dark:text-amber-400/80 mt-0.5">
+                      {deleteScheduledAt.toLocaleString("ko-KR")}에 계정이 영구 삭제됩니다.
+                    </p>
+                    <p className="text-xs text-amber-600/70 dark:text-amber-500/70 mt-1">
+                      재로그인하면 탈퇴가 자동으로 취소됩니다.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancelDelete}
+                  disabled={cancelling}
+                  className="shrink-0 border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/30 gap-1.5"
+                >
+                  {cancelling ? (
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : (
+                    <X size={13} />
+                  )}
+                  탈퇴 취소
+                </Button>
+              </div>
             </div>
-            <Button variant="destructive" size="sm" onClick={onDelete} className="gap-1.5">
-              <Trash2 size={14} />
-              탈퇴
-            </Button>
-          </div>
+          ) : (
+            <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-destructive">서비스 탈퇴</p>
+                <p className="text-xs text-muted-foreground">탈퇴 신청 후 24시간 유예 기간이 부여됩니다.</p>
+              </div>
+              <Button variant="destructive" size="sm" onClick={onDelete} className="gap-1.5">
+                <Trash2 size={14} />
+                탈퇴
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -3,7 +3,6 @@
 import { FC, useState, useMemo } from "react";
 import Link from "next/link";
 import { BoardCategoryTabs } from "./BoardCategoryTabs";
-import { BoardStickyNotice } from "./BoardStickyNotice";
 import { BoardList } from "./BoardList";
 import { BoardEditor } from "./BoardEditor";
 import {
@@ -357,7 +356,7 @@ export const BoardClient: FC<BoardClientProps> = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
                           <span className="text-xs font-semibold text-primary shrink-0">
-                            [{notice.type === "NOTICE" ? "공지" : "패치"}]
+                            [{notice.type === "NOTICE" ? "공지" : "업데이트"}]
                           </span>
                           {notice.isPinned && (
                             <Pin size={12} className="text-primary shrink-0" />
@@ -448,45 +447,52 @@ export const BoardClient: FC<BoardClientProps> = ({
             {/* 고정 공지 (자유게시판 탭에서만 표시) */}
             {category === "free" && pinnedNotices.length > 0 && (
               <div className="space-y-1.5">
-                {pinnedNotices.map((notice) => (
-                  <div
-                    key={notice.id}
-                    className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 flex items-center gap-2"
-                  >
-                    <Pin size={12} className="text-primary shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-primary">
-                          [{notice.type === "NOTICE" ? "공지" : "패치"}]
-                        </span>
-                        <span className="text-sm font-medium truncate">{notice.title}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {new Date(notice.createdAt).toLocaleDateString("ko-KR")}
-                      </p>
-                    </div>
-                    {isAdmin && (
-                      <button
-                        className="text-xs text-primary hover:text-primary/70 shrink-0"
-                        title="고정 해제"
-                        onClick={() => handleTogglePin(notice.id, notice.isPinned)}
+                {pinnedNotices.map((notice) => {
+                  const isExpanded = expandedNoticeId === notice.id;
+                  return (
+                    <div
+                      key={notice.id}
+                      className="rounded-lg border border-primary/30 bg-primary/5 overflow-hidden"
+                    >
+                      <div
+                        className="px-4 py-2.5 flex items-center gap-2 cursor-pointer hover:bg-primary/10 transition-colors"
+                        onClick={() => setExpandedNoticeId(isExpanded ? null : notice.id)}
                       >
-                        <PinOff size={13} />
-                      </button>
-                    )}
-                  </div>
-                ))}
+                        <Pin size={12} className="text-primary shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-primary">
+                              [{notice.type === "NOTICE" ? "공지" : "업데이트"}]
+                            </span>
+                            <span className="text-sm font-medium truncate">{notice.title}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {new Date(notice.createdAt).toLocaleDateString("ko-KR")}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {isAdmin && (
+                            <button
+                              className="text-xs text-primary hover:text-primary/70"
+                              title="고정 해제"
+                              onClick={(e) => { e.stopPropagation(); handleTogglePin(notice.id, notice.isPinned); }}
+                            >
+                              <PinOff size={13} />
+                            </button>
+                          )}
+                          <span className="text-muted-foreground text-xs">{isExpanded ? "▲" : "▼"}</span>
+                        </div>
+                      </div>
+                      {isExpanded && (
+                        <div className="px-4 py-3 border-t border-primary/20 bg-primary/5">
+                          <p className="text-sm whitespace-pre-wrap leading-relaxed">{notice.content}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
                 <div className="border-b" />
               </div>
-            )}
-
-            {category === "free" && (
-              <BoardStickyNotice
-                notices={notices}
-                isAdmin={isAdmin}
-                onEdit={handleEditNotice}
-                onDelete={handleDeleteNotice}
-              />
             )}
             {filteredPosts.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">

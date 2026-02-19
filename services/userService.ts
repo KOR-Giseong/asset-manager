@@ -17,6 +17,18 @@ export async function deleteUserAndData(userId: string) {
   return prisma.user.delete({ where: { id: userId } });
 }
 
+export async function requestSoftDelete(userId: string) {
+  return prisma.user.update({ where: { id: userId }, data: { deletedAt: new Date() } });
+}
+
+export async function cancelSoftDelete(userId: string) {
+  return prisma.user.update({ where: { id: userId }, data: { deletedAt: null } });
+}
+
+export async function clearReactivatedAt(userId: string) {
+  return prisma.user.update({ where: { id: userId }, data: { reactivatedAt: null } });
+}
+
 export async function resetUserData(userId: string) {
   // 자산, 이력 등만 삭제, 계정은 남김
   await prisma.asset.deleteMany({ where: { userId } });

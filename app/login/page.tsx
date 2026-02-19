@@ -58,10 +58,23 @@ function BrandSection() {
 // 로그인 섹션 컴포넌트
 // =========================================
 
-function LoginSection({ signInAction }: { signInAction: () => Promise<void> }) {
+function LoginSection({
+  signInAction,
+  reason,
+}: {
+  signInAction: () => Promise<void>;
+  reason?: string;
+}) {
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center bg-white px-8 py-12 dark:bg-gray-950 md:min-h-screen">
       <div className="w-full max-w-sm space-y-6 rounded-2xl border border-gray-200 bg-white p-8 shadow-xl dark:border-gray-800 dark:bg-gray-900">
+        {reason === "account_expired" && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/20 dark:text-amber-300">
+            계정이 만료되어 영구 삭제되었습니다.
+            <br />
+            새로 가입하여 이용하실 수 있습니다.
+          </div>
+        )}
         <div className="space-y-2 text-center">
           <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white md:text-2xl">
             로그인
@@ -112,7 +125,11 @@ function LoginSection({ signInAction }: { signInAction: () => Promise<void> }) {
 // 메인 페이지 컴포넌트
 // =========================================
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: { reason?: string };
+}) {
   const session = await auth();
 
   if (session) {
@@ -127,7 +144,7 @@ export default async function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col md:grid md:grid-cols-2">
       <BrandSection />
-      <LoginSection signInAction={handleSignIn} />
+      <LoginSection signInAction={handleSignIn} reason={searchParams.reason} />
     </div>
   );
 }
