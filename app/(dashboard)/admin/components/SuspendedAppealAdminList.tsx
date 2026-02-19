@@ -50,7 +50,7 @@ export function SuspendedAppealAdminList() {
 
   return (
     <div className="space-y-3">
-      {data.users.map((u: any) => (
+      {data.users.map((u: { id: string; nickname: string; email: string; suspendedReason: string | null; suspendedAppeal: string }) => (
         <div key={u.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
           {/* 상단: 사용자 정보 */}
           <div className="px-4 pt-4 pb-3 flex items-start gap-3">

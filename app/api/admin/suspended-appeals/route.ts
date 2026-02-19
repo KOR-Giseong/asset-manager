@@ -1,6 +1,6 @@
 import { auth as getServerSession } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 // 정지된 사용자 중 해제 신청한 목록 반환
 export async function GET() {

@@ -10,8 +10,19 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { FileText, MessageSquare, User, Calendar, AlertTriangle } from "lucide-react";
 
+interface Report {
+  status: string;
+  reason: string;
+  createdAt: string;
+  screenshotUrl?: string;
+  reporter?: { nickname: string };
+  reportedUser?: { nickname: string };
+  post?: { title: string };
+  comment?: { content: string };
+}
+
 interface ReportDetailProps {
-  report: any;
+  report: Report;
   onClose: () => void;
 }
 
