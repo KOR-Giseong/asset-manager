@@ -8,12 +8,13 @@ import { NoticeType, PostTag, POST_TAG_LABELS } from "@/types/board";
 import { Pin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const POST_TAGS: PostTag[] = ["FREE", "INFO", "QUESTION"];
+const POST_TAGS: PostTag[] = ["FREE", "INFO", "QUESTION", "SUGGESTION"];
 
 const TAG_STYLES: Record<PostTag, string> = {
   FREE: "border-border text-muted-foreground",
   INFO: "border-blue-300 text-blue-600 dark:border-blue-700 dark:text-blue-400",
   QUESTION: "border-amber-300 text-amber-600 dark:border-amber-700 dark:text-amber-400",
+  SUGGESTION: "border-emerald-300 text-emerald-600 dark:border-emerald-700 dark:text-emerald-400",
 };
 
 interface BoardEditorProps {
@@ -76,6 +77,7 @@ export const BoardEditor: FC<BoardEditorProps> = ({ initial, isAdmin, onSubmit, 
         }}
         isAdmin={isAdmin}
         hideMyTabs
+        writeMode
       />
       <form onSubmit={handleSubmit} className="space-y-3">
         <Input

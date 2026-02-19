@@ -3,11 +3,11 @@ import { FC } from "react";
 import { cn } from "@/lib/utils";
 
 const allCategories = [
-  { key: "free", label: "자유게시판", adminOnly: false, myTab: false },
-  { key: "notice", label: "공지사항", adminOnly: false, myTab: false },
-  { key: "patch", label: "패치노트", adminOnly: true, myTab: false },
-  { key: "mine", label: "내 글", adminOnly: false, myTab: true },
-  { key: "mycomments", label: "내 댓글", adminOnly: false, myTab: true },
+  { key: "free", label: "자유게시판", writeAdminOnly: false, myTab: false },
+  { key: "notice", label: "공지사항", writeAdminOnly: true, myTab: false },
+  { key: "patch", label: "패치노트", writeAdminOnly: true, myTab: false },
+  { key: "mine", label: "내 글", writeAdminOnly: false, myTab: true },
+  { key: "mycomments", label: "내 댓글", writeAdminOnly: false, myTab: true },
 ];
 
 interface BoardCategoryTabsProps {
@@ -16,6 +16,8 @@ interface BoardCategoryTabsProps {
   isAdmin?: boolean;
   /** true면 내 글/내 댓글 탭 숨김 (에디터 내부에서 사용) */
   hideMyTabs?: boolean;
+  /** true면 작성 모드 (관리자만 공지/패치 탭 노출) */
+  writeMode?: boolean;
 }
 
 export const BoardCategoryTabs: FC<BoardCategoryTabsProps> = ({
@@ -23,10 +25,10 @@ export const BoardCategoryTabs: FC<BoardCategoryTabsProps> = ({
   onSelect,
   isAdmin,
   hideMyTabs = false,
+  writeMode = false,
 }) => {
   const visible = allCategories.filter((c) => {
-    // 패치노트만 adminOnly, 공지사항은 항상 노출
-    if (c.key === "patch" && c.adminOnly && !isAdmin) return false;
+    if (writeMode && c.writeAdminOnly && !isAdmin) return false;
     if (hideMyTabs && c.myTab) return false;
     return true;
   });

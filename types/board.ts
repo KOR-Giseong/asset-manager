@@ -1,10 +1,11 @@
 export type NoticeType = "NOTICE" | "PATCH";
-export type PostTag = "FREE" | "INFO" | "QUESTION";
+export type PostTag = "FREE" | "INFO" | "QUESTION" | "SUGGESTION";
 
 export const POST_TAG_LABELS: Record<PostTag, string> = {
   FREE: "자유글",
   INFO: "정보공유",
   QUESTION: "질문",
+  SUGGESTION: "건의",
 };
 
 export interface Post {

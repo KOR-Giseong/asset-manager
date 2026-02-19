@@ -142,6 +142,7 @@ enum PostTag {
   FREE
   INFO
   QUESTION
+  SUGGESTION
 }
 
 model Account {

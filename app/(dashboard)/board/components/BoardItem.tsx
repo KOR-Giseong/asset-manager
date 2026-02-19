@@ -9,6 +9,7 @@ const TAG_BADGE_STYLES: Record<PostTag, string> = {
   FREE: "",
   INFO: "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800",
   QUESTION: "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
+  SUGGESTION: "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
 };
 
 interface BoardItemProps {
