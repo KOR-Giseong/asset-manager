@@ -29,7 +29,7 @@ interface ReportDetailProps {
 export const ReportDetailModal: FC<ReportDetailProps> = ({ report, onClose }) => {
   const isPost = !!report.post?.title;
   const targetContent = isPost
-    ? report.post.title
+    ? report.post!.title
     : report.comment?.content ?? "댓글";
 
   return (
