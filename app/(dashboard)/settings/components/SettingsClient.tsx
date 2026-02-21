@@ -74,6 +74,7 @@ export const SettingsClient: FC<SettingsClientProps> = ({ user, deletedAt }) => 
               const result = await changeNickname(nickname);
               if (!result.ok) throw new Error(result.error ?? "오류가 발생했습니다.");
               await updateSession();
+              router.refresh();
             }}
             onLogout={() => signOut({ callbackUrl: "/login" })}
             onDelete={() => setDangerModal({ open: true, type: "delete" })}

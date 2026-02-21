@@ -1,5 +1,5 @@
 "use client";
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -22,11 +22,14 @@ export const AccountSettings: FC<AccountSettingsProps> = ({
   onDelete,
   onCancelDelete,
 }) => {
-  const { register, handleSubmit, formState } = useForm({ defaultValues: { nickname } });
+  const { register, handleSubmit, formState, reset } = useForm({ defaultValues: { nickname } });
   const [checking, setChecking] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  // 서버에서 닉네임이 바뀌면 폼도 갱신
+  useEffect(() => { reset({ nickname }); }, [nickname, reset]);
 
   const handleNickname: SubmitHandler<{ nickname: string }> = async (data) => {
     setChecking(true);

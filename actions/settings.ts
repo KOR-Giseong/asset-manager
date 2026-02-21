@@ -14,7 +14,6 @@ export async function changeNickname(nickname: string): Promise<{ ok: boolean; e
   try {
     const user = await getCurrentUser();
     await updateNickname(user.id, trimmed);
-    revalidatePath("/settings");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "오류가 발생했습니다." };
