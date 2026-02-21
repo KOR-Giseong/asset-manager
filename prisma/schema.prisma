@@ -20,6 +20,7 @@ model User {
   isPrivacyMode     Boolean         @default(false)
   language          Language        @default(KO)
   allowNotifications Boolean        @default(true)
+  password          String?         // 이메일 회원가입 유저 전용 (OAuth 유저는 null)
   suspended         Boolean         @default(false) // 계정 정지 여부
   suspendedReason   String?         // 계정 정지 사유 (선택)
   suspendedAppeal   String?         // 해제 신청 사유 (선택)
@@ -36,6 +37,8 @@ model User {
   reports           Report[]
   likes             Like[]
   pushSubscriptions PushSubscription[]
+  inquiries         Inquiry[]
+  inquiryAnswers    InquiryAnswer[]
 }
 
 // 웹 푸시 구독 정보
@@ -195,6 +198,49 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// =========================================
+// 1:1 고객문의
+// =========================================
+
+model Inquiry {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  content   String        @db.Text
+  status    InquiryStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  answers   InquiryAnswer[]
+
+  @@index([userId])
+}
+
+model InquiryAnswer {
+  id        String   @id @default(cuid())
+  inquiryId String
+  inquiry   Inquiry  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  adminId   String
+  admin     User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([inquiryId])
+}
+
+enum InquiryStatus {
+  PENDING
+  ANSWERED
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
 }
 
 model Asset {

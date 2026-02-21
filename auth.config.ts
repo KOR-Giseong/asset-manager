@@ -13,7 +13,7 @@ export const authConfig: NextAuthConfig = {
   pages: {
     signIn: "/login",
   },
-  session: { strategy: "jwt", maxAge: 300 }, // JWT 만료 5분
+  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 }, // JWT 만료 30일
   callbacks: {
     authorized({ auth }) {
       return !!auth?.user;

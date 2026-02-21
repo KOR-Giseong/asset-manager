@@ -4,6 +4,7 @@ import { Shield } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminReportList } from "./AdminReportList";
 import { SuspendedAppealAdminList } from "./SuspendedAppealAdminList";
+import { AdminInquiryList } from "./AdminInquiryList";
 
 interface Report {
   id: string;
@@ -53,6 +54,9 @@ export function AdminDashboard({ reports }: AdminDashboardProps) {
           <TabsTrigger value="appeals" className="flex-1 sm:flex-none">
             정지 해제 신청
           </TabsTrigger>
+          <TabsTrigger value="inquiries" className="flex-1 sm:flex-none">
+            1:1 문의
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="reports" className="mt-4">
@@ -61,6 +65,10 @@ export function AdminDashboard({ reports }: AdminDashboardProps) {
 
         <TabsContent value="appeals" className="mt-4">
           <SuspendedAppealAdminList />
+        </TabsContent>
+
+        <TabsContent value="inquiries" className="mt-4">
+          <AdminInquiryList />
         </TabsContent>
       </Tabs>
     </div>

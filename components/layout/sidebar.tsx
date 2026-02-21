@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   MessageSquare,
   Settings,
+  HeadphonesIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -89,6 +90,13 @@ function getMenuItems(isAdmin: boolean): MenuItem[] {
       href: "/settings",
       icon: Settings,
       description: "계정 및 환경 설정",
+    },
+    {
+      id: "support",
+      label: "고객센터",
+      href: "/support",
+      icon: HeadphonesIcon,
+      description: "1:1 문의하기",
     },
   ];
   if (isAdmin) {
@@ -241,10 +249,16 @@ export function Sidebar({ className }: SidebarProps) {
 
         {/* 푸터 */}
         {!isCollapsed && (
-          <div className="border-t border-border p-4">
-            <p className="text-xs text-muted-foreground">
-              © 2026 Asset Manager
-            </p>
+          <div className="border-t border-border p-4 space-y-2">
+            <div className="flex flex-wrap gap-x-3 gap-y-1">
+              <Link href="/terms" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                이용약관
+              </Link>
+              <Link href="/privacy" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                개인정보처리방침
+              </Link>
+            </div>
+            <p className="text-xs text-muted-foreground">© 2026 Asset Manager</p>
           </div>
         )}
       </aside>
