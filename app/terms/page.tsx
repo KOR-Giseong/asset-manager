@@ -1,18 +1,11 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { BackButton } from "@/components/ui/back-button";
 
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         {/* 뒤로가기 */}
-        <Link
-          href="/login"
-          className="mb-8 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          로그인으로 돌아가기
-        </Link>
+        <BackButton label="뒤로가기" />
 
         <div className="space-y-8">
           <div>
