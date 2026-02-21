@@ -4,10 +4,21 @@ import { getCurrentUser } from "@/lib/auth";
 import { updateNickname, updateUserSettings, deleteUserAndData, resetUserData, exportUserData, requestSoftDelete, cancelSoftDelete, clearReactivatedAt } from "@/services/userService";
 import type { Currency, Language } from "@/types/user";
 
-export async function changeNickname(nickname: string) {
-  const user = await getCurrentUser();
-  await updateNickname(user.id, nickname);
-  revalidatePath("/settings");
+export async function changeNickname(nickname: string): Promise<{ ok: boolean; error?: string }> {
+  const trimmed = nickname?.trim() ?? "";
+  if (trimmed.length < 2 || trimmed.length > 16)
+    return { ok: false, error: "닉네임은 2~16자여야 합니다." };
+  if (!/^[a-zA-Z0-9가-힣]+$/.test(trimmed))
+    return { ok: false, error: "닉네임은 한글, 영문, 숫자만 사용 가능합니다." };
+
+  try {
+    const user = await getCurrentUser();
+    await updateNickname(user.id, trimmed);
+    revalidatePath("/settings");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "오류가 발생했습니다." };
+  }
 }
 
 export async function updateSettings(data: { baseCurrency?: Currency; language?: Language; isPrivacyMode?: boolean; allowNotifications?: boolean }) {

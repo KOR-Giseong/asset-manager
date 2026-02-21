@@ -71,7 +71,8 @@ export const SettingsClient: FC<SettingsClientProps> = ({ user, deletedAt }) => 
             nickname={user.nickname}
             deletedAt={deletedAt}
             onNicknameChange={async (nickname) => {
-              await changeNickname(nickname);
+              const result = await changeNickname(nickname);
+              if (!result.ok) throw new Error(result.error ?? "오류가 발생했습니다.");
               await updateSession();
             }}
             onLogout={() => signOut({ callbackUrl: "/login" })}
