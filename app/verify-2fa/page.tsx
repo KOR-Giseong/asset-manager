@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent, ClipboardEvent } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Loader2 } from "lucide-react";
@@ -20,6 +20,18 @@ export default function VerifyTwoFactorPage() {
       router.replace("/");
     }
   }, [session, router]);
+
+  // OTP 만료 여부 체크 - 만료됐으면 자동 로그아웃
+  useEffect(() => {
+    if (!session?.user?.twoFactorPending) return;
+    fetch("/api/auth/verify-2fa")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.valid) {
+          signOut({ callbackUrl: "/login" });
+        }
+      });
+  }, [session]);
 
   const code = digits.join("");
 
