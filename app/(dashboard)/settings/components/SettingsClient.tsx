@@ -17,15 +17,17 @@ import {
   cancelDeleteAccount,
   resetAllData,
   exportCSV,
+  toggleTwoFactor,
 } from "@/actions/settings";
 import type { User } from "@/types/user";
 
 interface SettingsClientProps {
   user: User;
   deletedAt?: string | null;
+  twoFactorEnabled?: boolean;
 }
 
-export const SettingsClient: FC<SettingsClientProps> = ({ user, deletedAt }) => {
+export const SettingsClient: FC<SettingsClientProps> = ({ user, deletedAt, twoFactorEnabled = false }) => {
   const { update: updateSession } = useSession();
   const router = useRouter();
   const [category, setCategory] = useState("account");
@@ -70,11 +72,17 @@ export const SettingsClient: FC<SettingsClientProps> = ({ user, deletedAt }) => 
           <AccountSettings
             nickname={user.nickname}
             deletedAt={deletedAt}
+            twoFactorEnabled={twoFactorEnabled}
             onNicknameChange={async (nickname) => {
               const result = await changeNickname(nickname);
               if (!result.ok) throw new Error(result.error ?? "오류가 발생했습니다.");
               await updateSession();
               router.refresh();
+            }}
+            onToggleTwoFactor={async () => {
+              const result = await toggleTwoFactor();
+              if (result.ok) router.refresh();
+              return result;
             }}
             onLogout={() => signOut({ callbackUrl: "/login" })}
             onDelete={() => setDangerModal({ open: true, type: "delete" })}

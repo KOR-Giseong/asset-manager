@@ -3,12 +3,14 @@ import { FC, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { CheckCircle2, LogOut, Trash2, Clock, X } from "lucide-react";
+import { CheckCircle2, LogOut, Trash2, Clock, X, ShieldCheck, ShieldOff } from "lucide-react";
 
 interface AccountSettingsProps {
   nickname: string;
   deletedAt?: string | null;
+  twoFactorEnabled?: boolean;
   onNicknameChange: (nickname: string) => Promise<void>;
+  onToggleTwoFactor?: () => Promise<{ ok: boolean; enabled?: boolean; error?: string }>;
   onLogout: () => void;
   onDelete: () => void;
   onCancelDelete?: () => Promise<void>;
@@ -17,7 +19,9 @@ interface AccountSettingsProps {
 export const AccountSettings: FC<AccountSettingsProps> = ({
   nickname,
   deletedAt,
+  twoFactorEnabled = false,
   onNicknameChange,
+  onToggleTwoFactor,
   onLogout,
   onDelete,
   onCancelDelete,
@@ -25,6 +29,8 @@ export const AccountSettings: FC<AccountSettingsProps> = ({
   const { register, handleSubmit, formState, reset } = useForm({ defaultValues: { nickname } });
   const [checking, setChecking] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [togglingTwoFactor, setTogglingTwoFactor] = useState(false);
+  const [twoFactorError, setTwoFactorError] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -54,6 +60,18 @@ export const AccountSettings: FC<AccountSettingsProps> = ({
       await onCancelDelete();
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const handleToggleTwoFactor = async () => {
+    if (!onToggleTwoFactor) return;
+    setTogglingTwoFactor(true);
+    setTwoFactorError("");
+    try {
+      const result = await onToggleTwoFactor();
+      if (!result.ok) setTwoFactorError(result.error ?? "오류가 발생했습니다.");
+    } finally {
+      setTogglingTwoFactor(false);
     }
   };
 
@@ -88,6 +106,42 @@ export const AccountSettings: FC<AccountSettingsProps> = ({
           )}
           {error && <div className="text-sm text-destructive">{error}</div>}
         </form>
+      </div>
+
+      {/* 보안 섹션 */}
+      <div className="border-t pt-6">
+        <h3 className="text-sm font-semibold text-foreground mb-1">보안</h3>
+        <p className="text-xs text-muted-foreground mb-4">로그인 보안을 강화합니다.</p>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+            <div className="flex items-start gap-2.5">
+              {twoFactorEnabled
+                ? <ShieldCheck size={16} className="text-emerald-600 mt-0.5 shrink-0" />
+                : <ShieldOff size={16} className="text-muted-foreground mt-0.5 shrink-0" />
+              }
+              <div>
+                <p className="text-sm font-medium">이메일 이중 인증 (2FA)</p>
+                <p className="text-xs text-muted-foreground">
+                  {twoFactorEnabled
+                    ? "활성화됨 — 로그인 시 이메일로 인증 코드를 발송합니다."
+                    : "비활성화됨 — 활성화하면 로그인마다 이메일 인증이 필요합니다."}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant={twoFactorEnabled ? "outline" : "secondary"}
+              size="sm"
+              onClick={handleToggleTwoFactor}
+              disabled={togglingTwoFactor}
+              className="shrink-0"
+            >
+              {togglingTwoFactor
+                ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                : twoFactorEnabled ? "비활성화" : "활성화"}
+            </Button>
+          </div>
+          {twoFactorError && <p className="text-xs text-destructive">{twoFactorError}</p>}
+        </div>
       </div>
 
       <div className="border-t pt-6">

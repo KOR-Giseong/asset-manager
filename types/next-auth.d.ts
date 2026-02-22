@@ -10,6 +10,7 @@ declare module "next-auth" {
     allowNotifications?: boolean;
     suspended?: boolean;
     suspendedReason?: string | null;
+    twoFactorPending?: boolean;
   }
 
   interface Session {
@@ -20,6 +21,7 @@ declare module "next-auth" {
       image?: string | null;
       suspended: boolean;
       suspendedReason?: string | null;
+      twoFactorPending?: boolean;
     };
   }
 }
@@ -35,5 +37,6 @@ declare module "next-auth/jwt" {
     allowNotifications?: boolean;
     suspended?: boolean;
     suspendedReason?: string | null;
+    twoFactorPending?: boolean;
   }
 }

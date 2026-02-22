@@ -5,6 +5,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { authConfig } from "@/auth.config";
+import { sendTwoFactorEmail } from "@/lib/email";
 
 /**
  * PrismaAdapter는 nickname(NOT NULL, UNIQUE) 필드를 모르기 때문에
@@ -70,6 +71,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
         if (!valid) return null;
 
+        // 2FA 활성화된 경우: OTP 발송 후 pending 상태로 반환
+        if (user.twoFactorEnabled) {
+          const code = Math.floor(100000 + Math.random() * 900000).toString();
+          const expires = new Date(Date.now() + 10 * 60 * 1000); // 10분
+
+          await prisma.twoFactorToken.deleteMany({ where: { email: user.email! } });
+          await prisma.twoFactorToken.create({
+            data: { email: user.email!, token: code, expires },
+          });
+          await sendTwoFactorEmail(user.email!, code);
+
+          return { ...user, twoFactorPending: true };
+        }
+
         return user;
       },
     }),
@@ -104,7 +119,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
     },
 
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user, trigger, session, account }) {
       // 최초 로그인 시 커스텀 필드 로드
       if (user) {
         token.id = user.id;
@@ -116,10 +131,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.allowNotifications = user.allowNotifications;
         token.suspended = user.suspended ?? false;
         token.suspendedReason = user.suspendedReason ?? null;
+        token.twoFactorPending = user.twoFactorPending ?? false;
+
+        // Google OAuth 로그인 시 2FA 체크
+        if (account?.provider === "google" && user.id) {
+          const tf = await prisma.user.findUnique({
+            where: { id: user.id as string },
+            select: { twoFactorEnabled: true, email: true },
+          });
+          if (tf?.twoFactorEnabled && tf.email) {
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            const expires = new Date(Date.now() + 10 * 60 * 1000);
+            await prisma.twoFactorToken.deleteMany({ where: { email: tf.email } });
+            await prisma.twoFactorToken.create({
+              data: { email: tf.email, token: code, expires },
+            });
+            await sendTwoFactorEmail(tf.email, code);
+            token.twoFactorPending = true;
+          }
+        }
       }
 
       // 세션 업데이트 시 DB에서 최신 정보 다시 로드
       if (trigger === "update" && token.id) {
+        // 2FA 인증 완료 시 pending 상태 해제
+        if ((session as { twoFactorPending?: boolean })?.twoFactorPending === false) {
+          token.twoFactorPending = false;
+        }
+
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
           select: {

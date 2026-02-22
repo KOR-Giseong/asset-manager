@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { updateNickname, updateUserSettings, deleteUserAndData, resetUserData, exportUserData, requestSoftDelete, cancelSoftDelete, clearReactivatedAt } from "@/services/userService";
 import type { Currency, Language } from "@/types/user";
+import { prisma } from "@/lib/prisma";
 
 export async function changeNickname(nickname: string): Promise<{ ok: boolean; error?: string }> {
   const trimmed = nickname?.trim() ?? "";
@@ -66,4 +67,26 @@ export async function resetAllData() {
 export async function exportCSV() {
   const user = await getCurrentUser();
   return await exportUserData(user.id);
+}
+
+/** 이메일 2FA 활성화/비활성화 토글 */
+export async function toggleTwoFactor(): Promise<{ ok: boolean; enabled?: boolean; error?: string }> {
+  try {
+    const user = await getCurrentUser();
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { twoFactorEnabled: true },
+    });
+    if (!dbUser) return { ok: false, error: "사용자를 찾을 수 없습니다." };
+
+    const next = !dbUser.twoFactorEnabled;
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { twoFactorEnabled: next },
+    });
+    revalidatePath("/settings");
+    return { ok: true, enabled: next };
+  } catch {
+    return { ok: false, error: "오류가 발생했습니다." };
+  }
 }

@@ -8,6 +8,7 @@ export const authConfig: NextAuthConfig = {
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
   pages: {
@@ -29,6 +30,7 @@ export const authConfig: NextAuthConfig = {
         session.user.allowNotifications = token.allowNotifications as boolean | undefined;
         session.user.suspended = (token.suspended as boolean) ?? false;
         session.user.suspendedReason = token.suspendedReason as string | null | undefined;
+        session.user.twoFactorPending = token.twoFactorPending as boolean | undefined;
       }
       return session;
     },

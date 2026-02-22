@@ -26,6 +26,7 @@ model User {
   suspendedAppeal   String?         // 해제 신청 사유 (선택)
   deletedAt         DateTime?       // 탈퇴 신청 시각 (24시간 유예)
   reactivatedAt     DateTime?       // 재활성화 시각 (토스트 표시용)
+  twoFactorEnabled  Boolean         @default(false) // 이메일 2FA 활성화 여부
   accounts          Account[]
   sessions          Session[]
   assets            Asset[]
@@ -236,6 +237,14 @@ enum InquiryStatus {
 }
 
 model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+}
+
+model TwoFactorToken {
   id        String   @id @default(cuid())
   email     String
   token     String   @unique

@@ -6,13 +6,14 @@ export default async function SettingsPage() {
   const user = await getCurrentUser();
   const dbUser = await prisma.user.findUnique({
     where: { id: user.id },
-    select: { deletedAt: true },
+    select: { deletedAt: true, twoFactorEnabled: true },
   });
 
   return (
     <SettingsClient
       user={user}
       deletedAt={dbUser?.deletedAt?.toISOString() ?? null}
+      twoFactorEnabled={dbUser?.twoFactorEnabled ?? false}
     />
   );
 }
